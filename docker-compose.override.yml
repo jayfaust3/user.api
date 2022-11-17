@@ -1,0 +1,14 @@
+version: '3.4'
+
+services:
+  user.api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=https://+:443;http://+:80
+      - SERVICE_CALL_RETRY_COUNT=3
+    ports:
+      - 5190:80
+      - 7076:443
+    volumes:
+      - ~/.aspnet/https:/root/.aspnet/https:ro
+      - ~/.microsoft/usersecrets:/root/.microsoft/usersecrets:ro
