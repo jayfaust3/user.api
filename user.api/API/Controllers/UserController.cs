@@ -1,7 +1,5 @@
-using System;
 using Microsoft.AspNetCore.Mvc;
 using Common.Models.API;
-using System.Net.Http;
 using Common.Models.DTO;
 
 namespace API.Controllers;
@@ -33,7 +31,7 @@ public class UserController : BaseController
             (
                 () => new UserDTO
                 {
-                    Id = "id",
+                    Id = id,
                     FirstName = "First",
                     LastName = "Last",
                     EmailAddress = "first.last@domain.com"

@@ -1,11 +1,18 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Persistence.Configuration.MongoDB;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+builder.Services.AddSingleton<IMongoDBSettings>
+(
+    new MongoDBSettings
+    {
+        ConnectionURI = Environment.GetEnvironmentVariable("MONGODB_CONNECTION_URI"),
+        DatabaseName = Environment.GetEnvironmentVariable("MONGODB_USER_DB_NAME"),
+        CollectionName = Environment.GetEnvironmentVariable("MONGODB_USER_COLLECTION_NAME"),
+    }
+);
 
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 

@@ -1,4 +1,4 @@
-version: '3.4'
+version: '3.8'
 
 services:
   user.api:
@@ -6,6 +6,9 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=https://+:443;http://+:80
       - SERVICE_CALL_RETRY_COUNT=3
+      - MONGODB_CONNECTION_URI=mongodb://mongodb1:27017,mongodb2:27017,mongodb3:27017/saint?replicaSet=rsmongo
+      - MONGODB_USER_DB_NAME=saint
+      - MONGODB_USER_COLLECTION_NAME=users
     ports:
       - 5190:80
       - 7076:443
