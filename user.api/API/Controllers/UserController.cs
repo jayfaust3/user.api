@@ -2,6 +2,7 @@ using System;
 using Microsoft.AspNetCore.Mvc;
 using Common.Models.API;
 using System.Net.Http;
+using Common.Models.DTO;
 
 namespace API.Controllers;
 
@@ -9,20 +10,38 @@ namespace API.Controllers;
 [Route("users")]
 public class UserController : BaseController
 {
-    public UserController()
-    {
-        
-    }
+    public UserController() {}
 
-    [HttpPost(Name = "Create User")]
-    public async Task<ActionResult<APIResponse<object>>> GetAll(CancellationToken token)
+    [HttpPost]
+    public async Task<ActionResult<APIResponse<UserDTO>>> Post([FromBody] UserDTO payload, CancellationToken token)
     {
         return await RunAsyncServiceCall
+        (
+            async () => await Task.Run(() => payload),
+            token,
+            HttpMethod.Post.Method
+        );
+
+    }
+
+    [HttpGet("{id}")]
+    public async Task<ActionResult<APIResponse<UserDTO>>> Get(string id, CancellationToken token)
+    {
+        return await RunAsyncServiceCall
+        (
+            async () => await Task.Run
             (
-                async () => await Task.Run(new Object()),
-                token,
-                HttpMethod.Post.Method
-            );
+                () => new UserDTO
+                {
+                    Id = "id",
+                    FirstName = "First",
+                    LastName = "Last",
+                    EmailAddress = "first.last@domain.com"
+                }
+            ),
+            token,
+            HttpMethod.Get.Method
+        );
 
     }
 }
