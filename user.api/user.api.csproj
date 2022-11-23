@@ -15,9 +15,10 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
     <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="6.4.0" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="6.4.0" />
-    <PackageReference Include="MongoDB.Driver" Version="2.18.0" />
-    <PackageReference Include="MongoDB.Driver.Core" Version="2.18.0" />
-    <PackageReference Include="MongoDB.Bson" Version="2.18.0" />
+    <PackageReference Include="OpenSearch.Client" Version="1.2.0" />
+    <PackageReference Include="OpenSearch.Net" Version="1.2.0" />
+    <PackageReference Include="OpenSearch.Client.JsonNetSerializer" Version="1.2.0" />
+    <PackageReference Include="OpenSearch.Net.Auth.AwsSigV4" Version="1.2.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -29,5 +30,27 @@
     <None Remove="MongoDB.Driver" />
     <None Remove="MongoDB.Driver.Core" />
     <None Remove="MongoDB.Bson" />
+    <None Remove="OpenSearch.Client" />
+    <None Remove="OpenSearch.Net" />
+    <None Remove="OpenSearch.Client.JsonNetSerializer" />
+    <None Remove="OpenSearch.Net.Auth.AwsSigV4" />
+    <None Remove="Common\Models\Configuration\" />
+    <None Remove="Common\Models\Configuration\OpenSearch\" />
+    <None Remove="Persistence\" />
+    <None Remove="Persistence\Repositories\" />
+    <None Remove="Common\Models\DTO\Base\" />
+    <None Remove="Common\Models\DTO\User\" />
+    <None Remove="Persistence\Repositories\Base\" />
+    <None Remove="Persistence\Repositories\User\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Common\Models\Configuration\" />
+    <Folder Include="Common\Models\Configuration\OpenSearch\" />
+    <Folder Include="Persistence\" />
+    <Folder Include="Persistence\Repositories\" />
+    <Folder Include="Common\Models\DTO\Base\" />
+    <Folder Include="Common\Models\DTO\User\" />
+    <Folder Include="Persistence\Repositories\Base\" />
+    <Folder Include="Persistence\Repositories\User\" />
   </ItemGroup>
 </Project>

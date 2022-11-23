@@ -1,15 +1,14 @@
-﻿using Persistence.Configuration.MongoDB;
+﻿using Common.Models.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddSingleton<IMongoDBSettings>
+builder.Services.AddSingleton<IOpenSearchSettings>
 (
-    new MongoDBSettings
-    {
-        ConnectionURI = Environment.GetEnvironmentVariable("MONGODB_CONNECTION_URI"),
-        DatabaseName = Environment.GetEnvironmentVariable("MONGODB_USER_DB_NAME"),
-        CollectionName = Environment.GetEnvironmentVariable("MONGODB_USER_COLLECTION_NAME"),
-    }
+    new OpenSearchSettings
+    (
+        Environment.GetEnvironmentVariable("OPENSEARCH_NODE_URIS")?.Split(',') ?? Array.Empty<string>(),
+        Environment.GetEnvironmentVariable("OPENSEARCH_USER_INDEX_NAME") ?? ""
+    )
 );
 
 builder.Services.AddControllers();

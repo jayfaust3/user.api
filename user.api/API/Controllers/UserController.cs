@@ -17,28 +17,31 @@ public class UserController : BaseController
         (
             async () => await Task.Run(() => payload),
             token,
-            HttpMethod.Post.Method
+            PostMethod
         );
 
     }
 
-    [HttpGet("{id}")]
-    public async Task<ActionResult<APIResponse<UserDTO>>> Get(string id, CancellationToken token)
+    [HttpGet("{token}")]
+    public async Task<ActionResult<APIResponse<IEnumerable<UserDTO>>>> Get(Guid searchToken, CancellationToken token)
     {
         return await RunAsyncServiceCall
         (
             async () => await Task.Run
             (
-                () => new UserDTO
+                () => new List<UserDTO>
                 {
-                    Id = id,
-                    FirstName = "First",
-                    LastName = "Last",
-                    EmailAddress = "first.last@domain.com"
-                }
+                    new UserDTO
+                    {
+                        Id = Guid.NewGuid(),
+                        FirstName = "First",
+                        LastName = "Last",
+                        EmailAddress = "first.last@domain.com"
+                    }
+                } as IEnumerable<UserDTO>
             ),
             token,
-            HttpMethod.Get.Method
+            GetMethod
         );
 
     }

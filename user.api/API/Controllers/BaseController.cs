@@ -7,6 +7,10 @@ namespace API.Controllers;
 
 public abstract class BaseController : ControllerBase
 {
+    protected static string GetMethod = HttpMethod.Get.Method;
+
+    protected static string PostMethod = HttpMethod.Post.Method;
+
     private readonly int _serviceCallRetryCount =
         int.Parse(Environment.GetEnvironmentVariable("SERVICE_CALL_RETRY_COUNT") ?? "1");
 
@@ -25,11 +29,11 @@ public abstract class BaseController : ControllerBase
             {
                 TResult serviceResult = await Task.Run(call, token);
 
-                if (httpMethod == HttpMethod.Post.Method)
+                if (httpMethod == PostMethod)
                 {
                     response = Created
                     (
-                        "",
+                        string.Empty,
                         new APIResponse<TResult>
                         (
                             serviceResult
@@ -57,7 +61,7 @@ public abstract class BaseController : ControllerBase
                     (
                         new APIResponse<TResult>
                         (
-                            (TResult)new Object(),
+                            (TResult)((object)null),
                             ex.Message
                         )
                     )
