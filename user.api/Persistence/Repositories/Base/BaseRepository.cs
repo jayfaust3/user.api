@@ -11,10 +11,6 @@ public abstract class BaseRepository<TEntity> : IRepository<TEntity> where TEnti
 
     protected BaseRepository(IOpenSearchSettings settings) => _client = GenerateClient(settings);
 
-    protected abstract ISearchRequest GenerateFindAllSearchRequest(TEntity entityLike);
-
-    protected abstract ISearchRequest GenerateFindOneSearchRequest(TEntity entityLike);
-
     private static IOpenSearchClient GenerateClient(IOpenSearchSettings settings)
     {
         var pool = new StaticConnectionPool
@@ -43,6 +39,22 @@ public abstract class BaseRepository<TEntity> : IRepository<TEntity> where TEnti
                 new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             ).TotalMilliseconds
         );
+
+    protected ISearchRequest GenerateFindOneSearchRequest(TEntity entityLike)
+    {
+        return new SearchRequest<UserDTO>
+        {
+            From = 0,
+            Size = 1,
+            Query = new MatchQuery
+            {
+                Field = Infer.Field<UserDTO>(f => f.Id),
+                Query = entityLike.Id?.ToString()
+            }
+        };
+    }
+
+    protected abstract ISearchRequest GenerateFindAllSearchRequest(TEntity entityLike);
 
     public async Task<TEntity> InsertAsync(TEntity entity)
     {
