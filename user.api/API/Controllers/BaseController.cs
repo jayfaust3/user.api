@@ -35,13 +35,7 @@ public abstract class BaseController : ControllerBase
                 }
                 else
                 {
-                    response = Ok
-                    (
-                        new APIResponse<TResult>
-                        (
-                            serviceResult
-                        )
-                    );
+                    response = HandleNonPostResult(serviceResult);
                 }
 
                 break;
