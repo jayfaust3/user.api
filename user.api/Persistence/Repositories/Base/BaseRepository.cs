@@ -11,6 +11,10 @@ public abstract class BaseRepository<TEntity> : IRepository<TEntity> where TEnti
 
     protected BaseRepository(IOpenSearchSettings settings) => _client = GenerateClient(settings);
 
+    protected abstract ISearchRequest GenerateFindAllSearchRequest(TEntity entityLike);
+
+    protected abstract ISearchRequest GenerateFindOneSearchRequest(TEntity entityLike);
+
     private static IOpenSearchClient GenerateClient(IOpenSearchSettings settings)
     {
         var pool = new StaticConnectionPool
@@ -19,32 +23,59 @@ public abstract class BaseRepository<TEntity> : IRepository<TEntity> where TEnti
         );
 
         var connectionSettings = new ConnectionSettings(pool)
-            .DefaultIndex(settings.IndexName);
+            .DefaultMappingFor<TEntity>(
+                m =>
+                {
+                    m.IndexName(settings.IndexName);
+                    m = m.IdProperty("Id");
+                    return m;
+                }
+            );
 
         return new OpenSearchClient(connectionSettings);
     }
 
-    public async Task<bool> InsertAsync(TEntity entity)
+    private static long GetUnixEpoch() =>
+        (
+            (long)
+            (
+                DateTime.Now.ToUniversalTime() -
+                new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+            ).TotalMilliseconds
+        );
+
+    public async Task<TEntity> InsertAsync(TEntity entity)
     {
         entity.Id = Guid.NewGuid();
+        entity.CreatedOn = GetUnixEpoch();
 
         var request = new IndexRequest<TEntity>(entity);
 
         IndexResponse response = await _client.IndexAsync(request);
 
-        return response.IsValid;
+        if (!response.IsValid) throw new Exception("Unable to insert record");
+
+        return entity;
+    }
+
+    public async Task<TEntity?> FindOneAsync(TEntity entityLike)
+    {
+        var request = GenerateFindAllSearchRequest(entityLike);
+
+        ISearchResponse<TEntity> response = await _client.SearchAsync<TEntity>(request);
+
+        return response.Documents.FirstOrDefault();
+
     }
 
     public async Task<IEnumerable<TEntity>> FindAllAsync(TEntity entityLike)
     {
-        var request = GenerateSearchRequest(entityLike);
+        var request = GenerateFindAllSearchRequest(entityLike);
 
         ISearchResponse<TEntity> response = await _client.SearchAsync<TEntity>(request);
 
         return response.Documents;
 
     }
-
-    protected abstract ISearchRequest GenerateSearchRequest(TEntity entityLike);
 }
 

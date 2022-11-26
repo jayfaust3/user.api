@@ -31,15 +31,7 @@ public abstract class BaseController : ControllerBase
 
                 if (httpMethod == PostMethod)
                 {
-                    response = Created
-                    (
-                        string.Empty,
-                        new APIResponse<TResult>
-                        (
-                            serviceResult
-                            
-                        )
-                    );
+                    response = HandlePostResult(serviceResult);
                 }
                 else
                 {
@@ -52,26 +44,50 @@ public abstract class BaseController : ControllerBase
                     );
                 }
 
-                return response;
+                break;
             }
             catch(Exception ex)
             {
                 if (currentAttempt == _serviceCallRetryCount)
-                    response = new ObjectResult
-                    (
-                        new APIResponse<TResult>
-                        (
-                            (TResult)((object)null),
-                            ex.Message
-                        )
-                    )
-                    {
-                        StatusCode = 500
-                    };
+                    response = HandleFailureResult<TResult>(ex);
             }
         }
 
         return response;
+    }
+
+    private static ActionResult<APIResponse<TResult>> HandlePostResult<TResult>(TResult serviceResult)
+    {
+        return new ObjectResult
+        (
+            new APIResponse<TResult>(serviceResult)
+        )
+        {
+            StatusCode = 201
+        };
+    }
+
+    private ActionResult<APIResponse<TResult>> HandleNonPostResult<TResult>(TResult serviceResult)
+    {
+        return Ok
+        (
+            new APIResponse<TResult>(serviceResult)
+        );
+    }
+
+    private static ActionResult<APIResponse<TResult>> HandleFailureResult<TResult>(Exception exception)
+    {
+        return new ObjectResult
+        (
+            new APIResponse<TResult>
+            (
+                (TResult)((object)null),
+                exception.Message
+            )
+        )
+        {
+            StatusCode = 500
+        };
     }
 }
 

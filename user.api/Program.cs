@@ -1,4 +1,5 @@
 ﻿using Common.Models.Configuration;
+using Persistence.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +11,8 @@ builder.Services.AddSingleton<IOpenSearchSettings>
         Environment.GetEnvironmentVariable("OPENSEARCH_USER_INDEX_NAME") ?? ""
     )
 );
+
+builder.Services.AddTransient<IUserRepository, UserRepository>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
