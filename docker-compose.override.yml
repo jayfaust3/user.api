@@ -6,7 +6,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=https://+:443;http://+:80
       - SERVICE_CALL_RETRY_COUNT=3
-      - OPENSEARCH_NODE_URIS=https://opensearch-master-node:9200,https://opensearch-backup-node:9200
+      - OPENSEARCH_NODE_URIS=http://opensearch-master-node:9200
       - OPENSEARCH_USER_INDEX_NAME=users
     ports:
       - 5190:80

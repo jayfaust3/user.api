@@ -42,6 +42,9 @@
     <None Remove="Common\Models\DTO\User\" />
     <None Remove="Persistence\Repositories\Base\" />
     <None Remove="Persistence\Repositories\User\" />
+    <None Remove="Common\Models\Data\" />
+    <None Remove="Common\Models\Data\Base\" />
+    <None Remove="Common\Models\Data\User\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Common\Models\Configuration\" />
@@ -52,5 +55,8 @@
     <Folder Include="Common\Models\DTO\User\" />
     <Folder Include="Persistence\Repositories\Base\" />
     <Folder Include="Persistence\Repositories\User\" />
+    <Folder Include="Common\Models\Data\" />
+    <Folder Include="Common\Models\Data\Base\" />
+    <Folder Include="Common\Models\Data\User\" />
   </ItemGroup>
 </Project>

@@ -1,11 +1,12 @@
 ﻿using Common.Models.Configuration;
+using Common.Models.Data;
 using Common.Models.DTO;
 using OpenSearch.Client;
 using OpenSearch.Net;
 
 namespace Persistence.Repositories;
 
-public abstract class BaseRepository<TEntity> : IRepository<TEntity> where TEntity : class, IDTO
+public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO> where TEntity : class, IEntity where TDTO : class, IDTO
 {
     IOpenSearchClient _client;
 
@@ -19,11 +20,12 @@ public abstract class BaseRepository<TEntity> : IRepository<TEntity> where TEnti
         );
 
         var connectionSettings = new ConnectionSettings(pool)
-            .DefaultMappingFor<TEntity>(
+            .DefaultMappingFor<TEntity>
+            (
                 m =>
                 {
                     m.IndexName(settings.IndexName);
-                    m = m.IdProperty("Id");
+                    m = m.IdProperty("id");
                     return m;
                 }
             );
@@ -40,7 +42,7 @@ public abstract class BaseRepository<TEntity> : IRepository<TEntity> where TEnti
             ).TotalMilliseconds
         );
 
-    protected ISearchRequest GenerateFindOneSearchRequest(TEntity entityLike)
+    protected ISearchRequest GenerateFindOneSearchRequest(TDTO dtoLike)
     {
         return new SearchRequest<UserDTO>
         {
@@ -49,17 +51,23 @@ public abstract class BaseRepository<TEntity> : IRepository<TEntity> where TEnti
             Query = new MatchQuery
             {
                 Field = Infer.Field<UserDTO>(f => f.Id),
-                Query = entityLike.Id?.ToString()
+                Query = dtoLike.Id?.ToString()
             }
         };
     }
 
-    protected abstract ISearchRequest GenerateFindAllSearchRequest(TEntity entityLike);
+    protected abstract ISearchRequest GenerateFindAllSearchRequest(TDTO dtoLike);
 
-    public async Task<TEntity> InsertAsync(TEntity entity)
+    protected abstract TEntity MapToEntity(TDTO dto);
+
+    protected abstract TDTO MapToDTO(TEntity dto);
+
+    public async Task<TDTO> InsertAsync(TDTO dto)
     {
-        entity.Id = Guid.NewGuid();
-        entity.CreatedOn = GetUnixEpoch();
+        var entity = MapToEntity(dto);
+
+        entity.id = Guid.NewGuid();
+        entity.created_on = GetUnixEpoch();
 
         var request = new IndexRequest<TEntity>(entity);
 
@@ -67,26 +75,27 @@ public abstract class BaseRepository<TEntity> : IRepository<TEntity> where TEnti
 
         if (!response.IsValid) throw new Exception("Unable to insert record");
 
-        return entity;
+        return MapToDTO(entity);
     }
 
-    public async Task<TEntity?> FindOneAsync(TEntity entityLike)
+    public async Task<TDTO?> FindOneAsync(TDTO dtoLike)
     {
-        var request = GenerateFindAllSearchRequest(entityLike);
+        var request = GenerateFindOneSearchRequest(dtoLike);
 
         ISearchResponse<TEntity> response = await _client.SearchAsync<TEntity>(request);
 
-        return response.Documents.FirstOrDefault();
+        var match = response.Documents.FirstOrDefault();
 
+        return match != null ? MapToDTO(match) : null;
     }
 
-    public async Task<IEnumerable<TEntity>> FindAllAsync(TEntity entityLike)
+    public async Task<IEnumerable<TDTO>> FindAllAsync(TDTO dtoLike)
     {
-        var request = GenerateFindAllSearchRequest(entityLike);
+        var request = GenerateFindAllSearchRequest(dtoLike);
 
         ISearchResponse<TEntity> response = await _client.SearchAsync<TEntity>(request);
 
-        return response.Documents;
+        return response.Documents.Select(MapToDTO);
 
     }
 }
