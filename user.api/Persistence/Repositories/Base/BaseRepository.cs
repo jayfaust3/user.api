@@ -28,7 +28,7 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO> where TE
                     m = m.IdProperty("id");
                     return m;
                 }
-            );
+            ).DefaultIndex(settings.IndexName);
 
         return new OpenSearchClient(connectionSettings);
     }
