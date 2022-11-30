@@ -1,4 +1,5 @@
-﻿using Common.Models.DTO;
+﻿using Common.Models.Data;
+using Common.Models.DTO;
 
 namespace Persistence.Repositories
 {
@@ -6,6 +7,6 @@ namespace Persistence.Repositories
     {
         Task<TDTO> InsertAsync(TDTO dto);
         Task<TDTO?> FindOneAsync(TDTO dtoLike);
-        Task<IEnumerable<TDTO>> FindAllAsync(TDTO dtoLike);
+        Task<IEnumerable<TDTO>> FindAllAsync(PageToken<TDTO> pageToken);
     }
 }

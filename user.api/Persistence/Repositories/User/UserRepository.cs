@@ -31,19 +31,18 @@ public class UserRepository : BaseRepository<UserEntity, UserDTO>, IUserReposito
         };
     }
 
-    protected override ISearchRequest GenerateFindAllSearchRequest(UserDTO entityLike)
+    protected override ISearchRequest GenerateFindAllSearchRequest(PageToken<UserDTO> pageToken)
     {
         return new SearchRequest<UserDTO>()
-        //{
-        //    From = 0,
-        //    Size = 1,
-        //    Query = new MatchQuery
-        //    {
-        //        Field = Infer.Field<UserDTO>(f => f.Id),
-        //        Query = entityLike.Id?.ToString()
-        //    }
-        //}
-        ;
+        {
+            From = pageToken.Cursor,
+            Size = pageToken.Limit,
+            //Query = new MatchQuery
+            //{
+            //    Field = Infer.Field<UserDTO>(f => f.Id),
+            //    Query = entityLike.Id?.ToString()
+            //}
+        };
     }
 
     

@@ -7,7 +7,7 @@ builder.Services.AddSingleton<IOpenSearchSettings>
 (
     new OpenSearchSettings
     (
-        Environment.GetEnvironmentVariable("OPENSEARCH_NODE_URIS")?.Split(',') ?? Array.Empty<string>(),
+        Environment.GetEnvironmentVariable("OPENSEARCH_NODE_URIS")?.Split(';') ?? Array.Empty<string>(),
         Environment.GetEnvironmentVariable("OPENSEARCH_USER_INDEX_NAME") ?? ""
     )
 );

@@ -56,7 +56,7 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO> where TE
         };
     }
 
-    protected abstract ISearchRequest GenerateFindAllSearchRequest(TDTO dtoLike);
+    protected abstract ISearchRequest GenerateFindAllSearchRequest(PageToken<TDTO> pageToken);
 
     protected abstract TEntity MapToEntity(TDTO dto);
 
@@ -89,9 +89,9 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO> where TE
         return match != null ? MapToDTO(match) : null;
     }
 
-    public async Task<IEnumerable<TDTO>> FindAllAsync(TDTO dtoLike)
+    public async Task<IEnumerable<TDTO>> FindAllAsync(PageToken<TDTO> pageToken)
     {
-        var request = GenerateFindAllSearchRequest(dtoLike);
+        var request = GenerateFindAllSearchRequest(pageToken);
 
         ISearchResponse<TEntity> response = await _client.SearchAsync<TEntity>(request);
 

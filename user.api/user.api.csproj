@@ -45,6 +45,8 @@
     <None Remove="Common\Models\Data\" />
     <None Remove="Common\Models\Data\Base\" />
     <None Remove="Common\Models\Data\User\" />
+    <None Remove="Common\Models\Data\Paging\" />
+    <None Remove="Persistence\Utilities\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Common\Models\Configuration\" />
@@ -58,5 +60,7 @@
     <Folder Include="Common\Models\Data\" />
     <Folder Include="Common\Models\Data\Base\" />
     <Folder Include="Common\Models\Data\User\" />
+    <Folder Include="Common\Models\Data\Paging\" />
+    <Folder Include="Persistence\Utilities\" />
   </ItemGroup>
 </Project>

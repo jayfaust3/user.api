@@ -2,6 +2,9 @@ using Microsoft.AspNetCore.Mvc;
 using Common.Models.API;
 using Common.Models.DTO;
 using Persistence.Repositories;
+using System.ComponentModel.DataAnnotations;
+using Persistence.Utilities;
+using Common.Models.Data;
 
 namespace API.Controllers;
 
@@ -17,24 +20,40 @@ public class UserController : BaseController
     }
 
     [HttpPost]
-    public async Task<ActionResult<APIResponse<UserDTO>>> Post([FromBody] UserDTO payload, CancellationToken token)
+    public async Task<ActionResult<APIResponse<UserDTO>>> Post([FromBody] UserDTO payload, CancellationToken cancellationToken)
     {
         return await RunAsyncServiceCall
         (
             async () => await _repository.InsertAsync(payload),
-            token,
+            cancellationToken,
             PostMethod
         );
 
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<APIResponse<UserDTO?>>> Get(Guid id, CancellationToken token)
+    public async Task<ActionResult<APIResponse<UserDTO?>>> Get(Guid id, CancellationToken cancellationToken)
     {
         return await RunAsyncServiceCall
         (
             async () => await _repository.FindOneAsync(new UserDTO { Id = id }),
-            token,
+            cancellationToken,
+            GetMethod
+        );
+
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<APIResponse<IEnumerable<UserDTO>>>> GetAll([Required][FromQuery] string pageToken, CancellationToken cancellationToken)
+    {
+        return await RunAsyncServiceCall
+        (
+            async () => {
+                PageToken<UserDTO> parsedToken = PagingUtilities.ParsePageToken<UserDTO>(pageToken);
+
+                return await _repository.FindAllAsync(parsedToken);
+            },
+            cancellationToken,
             GetMethod
         );
 
