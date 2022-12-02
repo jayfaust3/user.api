@@ -1,28 +1,29 @@
-﻿using System.Runtime.Serialization.Formatters.Binary;
+﻿using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Text;
 using Common.Models.Data;
 using Common.Models.DTO;
 using OpenSearch.Net;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Persistence.Utilities;
 
 public class PagingUtilities
 {
-	public static PageToken<TData> ParsePageToken<TData>(string encodedPageToken) where TData : class, IDTO
+	public static PageToken ParsePageToken(string encodedPageToken)
     {
-        PageToken<TData> parsedToken = null;
-
         byte[] tokenBytes = Convert.FromBase64String(encodedPageToken);
 
         var binaryFormatter = new BinaryFormatter();
 
-        using (var ms = new MemoryStream(tokenBytes))
+        using (var stream = new MemoryStream(tokenBytes))
         {
-            object obj = binaryFormatter.Deserialize(ms);
-            parsedToken = obj as PageToken<TData>;
-        }
+            using (var reader = new BinaryReader(stream, Encoding.UTF8, false))
+            {
+                object readObject = reader.Read();
 
-        return parsedToken;
+                return readObject as PageToken;
+            }
+        }
     }
 }
 

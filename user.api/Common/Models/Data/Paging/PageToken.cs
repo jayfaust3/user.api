@@ -2,9 +2,9 @@
 
 namespace Common.Models.Data;
 
-public class PageToken<TData> where TData : class, IDTO
+public class PageToken
 {
-	public TData EntityLike { get; set; }
+	public string Term { get; set; }
 	public int Cursor { get; set; }
 	public int Limit { get; set; }
 }

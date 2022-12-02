@@ -8,7 +8,7 @@ namespace Persistence.Repositories;
 
 public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO> where TEntity : class, IEntity where TDTO : class, IDTO
 {
-    IOpenSearchClient _client;
+    private IOpenSearchClient _client;
 
     protected BaseRepository(IOpenSearchSettings settings) => _client = GenerateClient(settings);
 
@@ -42,7 +42,7 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO> where TE
             ).TotalMilliseconds
         );
 
-    protected ISearchRequest GenerateFindOneSearchRequest(TDTO dtoLike)
+    protected ISearchRequest GenerateFindOneSearchRequest(Guid id)
     {
         return new SearchRequest<UserDTO>
         {
@@ -51,12 +51,12 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO> where TE
             Query = new MatchQuery
             {
                 Field = Infer.Field<UserDTO>(f => f.Id),
-                Query = dtoLike.Id?.ToString()
+                Query = id.ToString()
             }
         };
     }
 
-    protected abstract ISearchRequest GenerateFindAllSearchRequest(PageToken<TDTO> pageToken);
+    protected abstract ISearchRequest GenerateFindAllSearchRequest(PageToken pageToken);
 
     protected abstract TEntity MapToEntity(TDTO dto);
 
@@ -78,9 +78,9 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO> where TE
         return MapToDTO(entity);
     }
 
-    public async Task<TDTO?> FindOneAsync(TDTO dtoLike)
+    public async Task<TDTO?> FindOneAsync(Guid id)
     {
-        var request = GenerateFindOneSearchRequest(dtoLike);
+        var request = GenerateFindOneSearchRequest(id);
 
         ISearchResponse<TEntity> response = await _client.SearchAsync<TEntity>(request);
 
@@ -89,7 +89,7 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO> where TE
         return match != null ? MapToDTO(match) : null;
     }
 
-    public async Task<IEnumerable<TDTO>> FindAllAsync(PageToken<TDTO> pageToken)
+    public async Task<IEnumerable<TDTO>> FindAllAsync(PageToken pageToken)
     {
         var request = GenerateFindAllSearchRequest(pageToken);
 

@@ -2,6 +2,7 @@
 using Common.Models.Data;
 using Common.Models.DTO;
 using OpenSearch.Client;
+using OpenSearch.Net;
 
 namespace Persistence.Repositories;
 
@@ -31,17 +32,18 @@ public class UserRepository : BaseRepository<UserEntity, UserDTO>, IUserReposito
         };
     }
 
-    protected override ISearchRequest GenerateFindAllSearchRequest(PageToken<UserDTO> pageToken)
+    protected override ISearchRequest GenerateFindAllSearchRequest(PageToken pageToken)
     {
-        return new SearchRequest<UserDTO>()
+
+        return new SearchRequest<UserDTO>
         {
             From = pageToken.Cursor,
             Size = pageToken.Limit,
-            //Query = new MatchQuery
-            //{
-            //    Field = Infer.Field<UserDTO>(f => f.Id),
-            //    Query = entityLike.Id?.ToString()
-            //}
+            Query = new TermQuery
+            {
+                Field = "_all",
+                Value = pageToken.Term
+            }
         };
     }
 

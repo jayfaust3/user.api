@@ -36,7 +36,7 @@ public class UserController : BaseController
     {
         return await RunAsyncServiceCall
         (
-            async () => await _repository.FindOneAsync(new UserDTO { Id = id }),
+            async () => await _repository.FindOneAsync(id),
             cancellationToken,
             GetMethod
         );
@@ -49,7 +49,7 @@ public class UserController : BaseController
         return await RunAsyncServiceCall
         (
             async () => {
-                PageToken<UserDTO> parsedToken = PagingUtilities.ParsePageToken<UserDTO>(pageToken);
+                PageToken parsedToken = PagingUtilities.ParsePageToken(pageToken);
 
                 return await _repository.FindAllAsync(parsedToken);
             },
