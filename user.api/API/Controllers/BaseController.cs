@@ -29,14 +29,16 @@ public abstract class BaseController : ControllerBase
             {
                 TResult serviceResult = await Task.Run(call, token);
 
+                if (serviceResult == null)
+                {
+                    response = HandleNullResult<TResult>();
+                    break;
+                }
+
                 if (httpMethod == PostMethod)
-                {
                     response = HandlePostResult(serviceResult);
-                }
                 else
-                {
                     response = HandleNonPostResult(serviceResult);
-                }
 
                 break;
             }
@@ -67,6 +69,21 @@ public abstract class BaseController : ControllerBase
         (
             new APIResponse<TResult>(serviceResult)
         );
+    }
+
+    private static ActionResult<APIResponse<TResult>> HandleNullResult<TResult>()
+    {
+        return new ObjectResult
+        (
+            new APIResponse<TResult>
+            (
+                (TResult)((object)null),
+                "Entity not found"
+            )
+        )
+        {
+            StatusCode = 404
+        };
     }
 
     private static ActionResult<APIResponse<TResult>> HandleFailureResult<TResult>(Exception exception)

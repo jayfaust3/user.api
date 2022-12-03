@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
+using System.Text.Json;
 using Common.Models.Data;
 using Common.Models.DTO;
 using OpenSearch.Net;
@@ -19,9 +20,9 @@ public class PagingUtilities
         {
             using (var reader = new BinaryReader(stream, Encoding.UTF8, false))
             {
-                var readObject = reader.Read();
+                var tokenJson = reader.ReadString();
 
-                return readObject as PageToken;
+                return JsonSerializer.Deserialize<PageToken>(tokenJson);
             }
         }
     }
