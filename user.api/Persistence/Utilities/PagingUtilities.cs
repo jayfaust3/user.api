@@ -19,7 +19,7 @@ public class PagingUtilities
         {
             using (var reader = new BinaryReader(stream, Encoding.UTF8, false))
             {
-                object readObject = reader.Read();
+                var readObject = reader.Read();
 
                 return readObject as PageToken;
             }
