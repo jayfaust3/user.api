@@ -5,6 +5,7 @@ using System.Text.Json;
 using Common.Models.Data;
 using Common.Models.DTO;
 using OpenSearch.Net;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Persistence.Utilities;
 
@@ -14,17 +15,9 @@ public class PagingUtilities
     {
         byte[] tokenBytes = Convert.FromBase64String(encodedPageToken);
 
-        var binaryFormatter = new BinaryFormatter();
+        var tokenJson = Encoding.UTF8.GetString(tokenBytes);
 
-        using (var stream = new MemoryStream(tokenBytes))
-        {
-            using (var reader = new BinaryReader(stream, Encoding.UTF8, false))
-            {
-                var tokenJson = reader.ReadString();
-
-                return JsonSerializer.Deserialize<PageToken>(tokenJson);
-            }
-        }
+        return JsonSerializer.Deserialize<PageToken>(tokenJson);
     }
 }
 
