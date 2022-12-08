@@ -1,11 +1,8 @@
-﻿using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
+﻿using System.Text;
 using System.Text.Json;
 using Common.Models.Data;
 using Common.Models.DTO;
 using OpenSearch.Net;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace Persistence.Utilities;
 

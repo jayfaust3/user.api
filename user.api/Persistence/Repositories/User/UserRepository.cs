@@ -39,10 +39,10 @@ public class UserRepository : BaseRepository<UserEntity, UserDTO>, IUserReposito
         {
             From = pageToken.Cursor,
             Size = pageToken.Limit,
-            Query = new TermQuery
+            Query = new MatchQuery
             {
-                Field = "_all",
-                Value = pageToken.Term
+                Field = Infer.Field<UserDTO>(f => f.EmailAddress),
+                Query = pageToken.Term
             }
         };
     }

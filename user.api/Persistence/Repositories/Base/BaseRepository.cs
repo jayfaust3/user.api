@@ -33,14 +33,20 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO> where TE
         return new OpenSearchClient(connectionSettings);
     }
 
-    private static long GetUnixEpoch() =>
+    private static int GetUnixEpoch() =>
         (
-            (long)
+            (int)
             (
                 DateTime.Now.ToUniversalTime() -
                 new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             ).TotalMilliseconds
         );
+
+    protected IEnumerable<string> GetAllSearchableFields() =>
+        typeof(TEntity)
+        .GetProperties()
+        .Select(p => p.Name)
+        .Where(n => n != "id" && n != "created_on");
 
     protected ISearchRequest GenerateFindOneSearchRequest(Guid id)
     {

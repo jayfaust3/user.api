@@ -3,6 +3,6 @@
 public interface IEntity
 {
     Guid id { get; set; }
-    long created_on { get; set; }
+    int created_on { get; set; }
 }
 
