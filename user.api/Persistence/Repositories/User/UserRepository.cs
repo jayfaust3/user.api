@@ -1,8 +1,9 @@
 ﻿using Common.Models.Configuration;
 using Common.Models.Data;
 using Common.Models.DTO;
-using OpenSearch.Client;
-using OpenSearch.Net;
+using Elastic.Clients.Elasticsearch;
+using Elastic.Clients.Elasticsearch.QueryDsl;
+using Elastic.Transport;
 
 namespace Persistence.Repositories;
 
@@ -31,22 +32,5 @@ public class UserRepository : BaseRepository<UserEntity, UserDTO>, IUserReposito
             EmailAddress = dto.email_address
         };
     }
-
-    protected override ISearchRequest GenerateFindAllSearchRequest(PageToken pageToken)
-    {
-
-        return new SearchRequest<UserDTO>
-        {
-            From = pageToken.Cursor,
-            Size = pageToken.Limit,
-            Query = new MatchQuery
-            {
-                Field = Infer.Field<UserDTO>(f => f.EmailAddress),
-                Query = pageToken.Term
-            }
-        };
-    }
-
-    
 }
 

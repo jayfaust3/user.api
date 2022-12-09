@@ -15,10 +15,7 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
     <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="6.4.0" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="6.4.0" />
-    <PackageReference Include="OpenSearch.Client" Version="1.2.0" />
-    <PackageReference Include="OpenSearch.Net" Version="1.2.0" />
-    <PackageReference Include="OpenSearch.Client.JsonNetSerializer" Version="1.2.0" />
-    <PackageReference Include="OpenSearch.Net.Auth.AwsSigV4" Version="1.2.0" />
+    <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.0.2" />
   </ItemGroup>
 
   <ItemGroup>
@@ -47,6 +44,8 @@
     <None Remove="Common\Models\Data\User\" />
     <None Remove="Common\Models\Data\Paging\" />
     <None Remove="Persistence\Utilities\" />
+    <None Remove="Elasticsearch.Net" />
+    <None Remove="Elastic.Clients.Elasticsearch" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Common\Models\Configuration\" />

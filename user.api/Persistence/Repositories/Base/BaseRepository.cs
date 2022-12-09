@@ -1,36 +1,36 @@
 ﻿using Common.Models.Configuration;
 using Common.Models.Data;
 using Common.Models.DTO;
-using OpenSearch.Client;
-using OpenSearch.Net;
+using Elastic.Clients.Elasticsearch;
+using Elastic.Clients.Elasticsearch.QueryDsl;
+using Elastic.Transport;
 
 namespace Persistence.Repositories;
 
 public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO> where TEntity : class, IEntity where TDTO : class, IDTO
 {
-    private IOpenSearchClient _client;
+    private ElasticsearchClient _client;
 
     protected BaseRepository(IOpenSearchSettings settings) => _client = GenerateClient(settings);
 
-    private static IOpenSearchClient GenerateClient(IOpenSearchSettings settings)
+    private static ElasticsearchClient GenerateClient(IOpenSearchSettings settings)
     {
-        var pool = new StaticConnectionPool
+        var pool = new StaticNodePool
         (
             settings.NodeURIs.Select(uri => new Uri(uri))
         );
 
-        var connectionSettings = new ConnectionSettings(pool)
+        var connectionSettings = new ElasticsearchClientSettings(pool)
             .DefaultMappingFor<TEntity>
             (
                 m =>
                 {
                     m.IndexName(settings.IndexName);
                     m = m.IdProperty("id");
-                    return m;
                 }
             ).DefaultIndex(settings.IndexName);
 
-        return new OpenSearchClient(connectionSettings);
+        return new ElasticsearchClient(connectionSettings);
     }
 
     private static int GetUnixEpoch() =>
@@ -42,27 +42,25 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO> where TE
             ).TotalMilliseconds
         );
 
-    protected IEnumerable<string> GetAllSearchableFields() =>
+    private IEnumerable<string> GetAllSearchableFields() =>
         typeof(TEntity)
         .GetProperties()
         .Select(p => p.Name)
         .Where(n => n != "id" && n != "created_on");
 
-    protected ISearchRequest GenerateFindOneSearchRequest(Guid id)
+    protected SearchRequest GenerateFindOneSearchRequest(Guid id)
     {
         return new SearchRequest<UserDTO>
         {
             From = 0,
             Size = 1,
-            Query = new MatchQuery
+            Query = new TermQuery
+            (Infer.Field<UserDTO>(f => f.Id))
             {
-                Field = Infer.Field<UserDTO>(f => f.Id),
-                Query = id.ToString()
+                Value = id.ToString()
             }
         };
     }
-
-    protected abstract ISearchRequest GenerateFindAllSearchRequest(PageToken pageToken);
 
     protected abstract TEntity MapToEntity(TDTO dto);
 
@@ -79,7 +77,7 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO> where TE
 
         IndexResponse response = await _client.IndexAsync(request);
 
-        if (!response.IsValid) throw new Exception("Unable to insert record");
+        if (!response.IsSuccess()) throw new Exception("Unable to insert record");
 
         return MapToDTO(entity);
     }
@@ -88,7 +86,7 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO> where TE
     {
         var request = GenerateFindOneSearchRequest(id);
 
-        ISearchResponse<TEntity> response = await _client.SearchAsync<TEntity>(request);
+        SearchResponse<TEntity> response = await _client.SearchAsync<TEntity>(request);
 
         var match = response.Documents.FirstOrDefault();
 
@@ -97,11 +95,45 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO> where TE
 
     public async Task<IEnumerable<TDTO>> FindAllAsync(PageToken pageToken)
     {
-        var request = GenerateFindAllSearchRequest(pageToken);
+        IEnumerable<TDTO> results = new List<TDTO>();
 
-        ISearchResponse<TEntity> response = await _client.SearchAsync<TEntity>(request);
+        SearchResponse<TEntity> response = await _client.SearchAsync<TEntity>
+            (
+                s =>
+                    s
+                    .Query
+                    (
+                        q =>
+                            q
+                            .Bool
+                            (
+                                b =>
+                                    b
+                                    .Should
+                                    (
+                                        bs =>
+                                            GetAllSearchableFields().Select<string, Query>
+                                            (
+                                                fieldName =>
+                                                    new TermQuery
+                                                    (
+                                                        new Field(fieldName)
+                                                    )
+                                                    {
+                                                        Value = pageToken.Term
+                                                    }
+                                            )
+                                    )
+                            )
+                    )
+            );
 
-        return response.Documents.Select(MapToDTO);
+        if (response.IsSuccess())
+            results = response.Documents.Select(MapToDTO);
+        else
+            throw response.ApiCallDetails.OriginalException;
+
+        return results;
 
     }
 }
