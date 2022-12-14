@@ -2,7 +2,6 @@
 using System.Text.Json;
 using Common.Models.Data;
 using Common.Models.DTO;
-using OpenSearch.Net;
 
 namespace Persistence.Utilities;
 

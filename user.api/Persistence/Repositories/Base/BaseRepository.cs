@@ -7,18 +7,24 @@ using Elastic.Transport;
 
 namespace Persistence.Repositories;
 
-public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO> where TEntity : class, IEntity where TDTO : class, IDTO
+public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO>
+    where TEntity : class, IEntity
+    where TDTO : class, IDTO
 {
+    private string _indexName;
     private ElasticsearchClient _client;
-
-    protected BaseRepository(IOpenSearchSettings settings) => _client = GenerateClient(settings);
+    
+    protected BaseRepository(IOpenSearchSettings settings)
+    {
+        _indexName = settings.IndexName;
+        _client = GenerateClient(settings);
+    }
 
     private static ElasticsearchClient GenerateClient(IOpenSearchSettings settings)
     {
-        var pool = new StaticNodePool
-        (
-            settings.NodeURIs.Select(uri => new Uri(uri))
-        );
+        var nodeURIs = settings.NodeURIs.Select(uri => new Uri(uri));
+
+        var pool = new StaticNodePool(nodeURIs);
 
         var connectionSettings = new ElasticsearchClientSettings(pool)
             .DefaultMappingFor<TEntity>
@@ -46,18 +52,38 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO> where TE
         typeof(TEntity)
         .GetProperties()
         .Select(p => p.Name)
-        .Where(n => n != "id" && n != "created_on");
+        .Where
+        (
+            name =>
+                name != "id" &&
+                name != "created_on"
+        );
 
-    protected SearchRequest GenerateFindOneSearchRequest(Guid id)
+    protected virtual GetRequest GenerateFindOneGetRequest(Guid id) => new GetRequest(_indexName, id);
+
+    protected virtual SearchRequest<TEntity> GenerateFindAllSearchRequest(PageToken pageToken)
     {
-        return new SearchRequest<UserDTO>
+        var entityFields = GetAllSearchableFields();
+
+        Fields? fields = null;
+
+        foreach (var fieldName in entityFields)
         {
-            From = 0,
-            Size = 1,
-            Query = new TermQuery
-            (Infer.Field<UserDTO>(f => f.Id))
+            if ((fields?.Count() ?? 0) == 0)
+                fields = new Field(fieldName);
+            else
+                fields = fields?.And(new Field(fieldName));
+
+        }
+
+        return new SearchRequest<TEntity>
+        {
+            From = pageToken.Cursor,
+            Size = pageToken.Limit,
+            Query = new MultiMatchQuery
             {
-                Value = id.ToString()
+                Query = pageToken.Term,
+                Fields = fields
             }
         };
     }
@@ -68,7 +94,7 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO> where TE
 
     public async Task<TDTO> InsertAsync(TDTO dto)
     {
-        var entity = MapToEntity(dto);
+        TEntity entity = MapToEntity(dto);
 
         entity.id = Guid.NewGuid();
         entity.created_on = GetUnixEpoch();
@@ -77,18 +103,23 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO> where TE
 
         IndexResponse response = await _client.IndexAsync(request);
 
-        if (!response.IsSuccess()) throw new Exception("Unable to insert record");
+        if (!response.IsSuccess()) throw response.ApiCallDetails.OriginalException;
 
         return MapToDTO(entity);
     }
 
     public async Task<TDTO?> FindOneAsync(Guid id)
     {
-        var request = GenerateFindOneSearchRequest(id);
+        TEntity? match = null;
 
-        SearchResponse<TEntity> response = await _client.SearchAsync<TEntity>(request);
+        GetRequest request = GenerateFindOneGetRequest(id);
 
-        var match = response.Documents.FirstOrDefault();
+        GetResponse<TEntity> response = await _client.GetAsync<TEntity>(request);
+
+        if (response.IsSuccess())
+            match = response.Source;
+        else
+            throw response.ApiCallDetails.OriginalException;
 
         return match != null ? MapToDTO(match) : null;
     }
@@ -97,36 +128,9 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO> where TE
     {
         IEnumerable<TDTO> results = new List<TDTO>();
 
-        SearchResponse<TEntity> response = await _client.SearchAsync<TEntity>
-            (
-                s =>
-                    s
-                    .Query
-                    (
-                        q =>
-                            q
-                            .Bool
-                            (
-                                b =>
-                                    b
-                                    .Should
-                                    (
-                                        bs =>
-                                            GetAllSearchableFields().Select<string, Query>
-                                            (
-                                                fieldName =>
-                                                    new TermQuery
-                                                    (
-                                                        new Field(fieldName)
-                                                    )
-                                                    {
-                                                        Value = pageToken.Term
-                                                    }
-                                            )
-                                    )
-                            )
-                    )
-            );
+        SearchRequest<TEntity> request = GenerateFindAllSearchRequest(pageToken);
+
+        SearchResponse<TEntity> response = await _client.SearchAsync<TEntity>(request);
 
         if (response.IsSuccess())
             results = response.Documents.Select(MapToDTO);
@@ -134,7 +138,5 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO> where TE
             throw response.ApiCallDetails.OriginalException;
 
         return results;
-
     }
 }
-
