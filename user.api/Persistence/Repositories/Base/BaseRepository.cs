@@ -11,8 +11,8 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO>
     where TEntity : class, IEntity
     where TDTO : class, IDTO
 {
-    private string _indexName;
-    private ElasticsearchClient _client;
+    private readonly string _indexName;
+    private readonly ElasticsearchClient _client;
     
     protected BaseRepository(IOpenSearchSettings settings)
     {

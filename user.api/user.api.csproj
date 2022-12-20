@@ -16,6 +16,10 @@
     <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="6.4.0" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="6.4.0" />
     <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.0.2" />
+    <PackageReference Include="MassTransit.Extensions.DependencyInjection" Version="7.3.1" />
+    <PackageReference Include="MassTransit.RabbitMQ" Version="8.0.9" />
+    <PackageReference Include="MassTransit" Version="8.0.9" />
+    <PackageReference Include="RabbitMQ.Client" Version="6.4.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -46,6 +50,16 @@
     <None Remove="Persistence\Utilities\" />
     <None Remove="Elasticsearch.Net" />
     <None Remove="Elastic.Clients.Elasticsearch" />
+    <None Remove="MassTransit.Extensions.DependencyInjection" />
+    <None Remove="MassTransit.RabbitMQ" />
+    <None Remove="MassTransit" />
+    <None Remove="RabbitMQ.Client" />
+    <None Remove="API\Consumers\" />
+    <None Remove="Messaging\" />
+    <None Remove="Messaging\Bus\" />
+    <None Remove="Messaging\Service\" />
+    <None Remove="Common\Models\Message\" />
+    <None Remove="Common\Models\Message\Base\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Common\Models\Configuration\" />
@@ -61,5 +75,11 @@
     <Folder Include="Common\Models\Data\User\" />
     <Folder Include="Common\Models\Data\Paging\" />
     <Folder Include="Persistence\Utilities\" />
+    <Folder Include="API\Consumers\" />
+    <Folder Include="Messaging\" />
+    <Folder Include="Messaging\Bus\" />
+    <Folder Include="Messaging\Service\" />
+    <Folder Include="Common\Models\Message\" />
+    <Folder Include="Common\Models\Message\Base\" />
   </ItemGroup>
 </Project>
