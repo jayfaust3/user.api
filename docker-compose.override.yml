@@ -5,6 +5,11 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=https://+:443;http://+:80
+      - RABBITMQ_HOST=http://rabbit-mq
+      - RABBITMQ_VIRTUAL_HOST=/
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USERNAME=user
+      - RABBITMQ_PASSWORD=bitnami
       - SERVICE_CALL_RETRY_COUNT=3
       - OPENSEARCH_NODE_URIS=http://opensearch-master-node:9200
       - OPENSEARCH_USER_INDEX_NAME=users

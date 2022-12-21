@@ -1,8 +1,6 @@
 ﻿using Messaging.Bus;
 using Messaging.Service;
-using Microsoft.Extensions.Configuration;
 using MassTransit;
-using MassTransit.ExtensionsDependencyInjectionIntegration;
 using Persistence.Repositories;
 using RabbitMQ.Client;
 using Common.Models.Configuration;
@@ -23,9 +21,11 @@ builder.Services.AddTransient<IUserRepository, UserRepository>();
 //db
 
 //messaging
-var rabbitHost = Environment.GetEnvironmentVariable("RabbitMQ_Host");
-var rabbitUser = Environment.GetEnvironmentVariable("RabbitMQ_Username");
-var rabbitPassword = Environment.GetEnvironmentVariable("RabbitMQ_Password");
+var rabbitHost = Environment.GetEnvironmentVariable("RABBITMQ_HOST");
+var rabbitVirtualHost = Environment.GetEnvironmentVariable("RABBITMQ_VIRTUAL_HOST") ?? "/";
+var rabbitPort = int.Parse(Environment.GetEnvironmentVariable("RABBITMQ_PORT") ?? "5672");
+var rabbitUser = Environment.GetEnvironmentVariable("RABBITMQ_USERNAME");
+var rabbitPassword = Environment.GetEnvironmentVariable("RABBITMQ_PASSWORD");
 
 if (
     string.IsNullOrWhiteSpace(rabbitHost) ||
@@ -38,7 +38,8 @@ builder.Services.AddTransient<IConnectionFactory>(_ => new ConnectionFactory
     HostName = rabbitHost.Split("//")[1],
     UserName = rabbitUser,
     Password = rabbitPassword,
-    VirtualHost = "/"
+    Port = rabbitPort,
+    VirtualHost = rabbitVirtualHost
 });
 builder.Services.AddSingleton<IHostedService, BusService>();
 builder.Services.AddTransient<IMessageService, MessageService>();

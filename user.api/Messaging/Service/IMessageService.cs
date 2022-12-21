@@ -4,9 +4,8 @@ namespace Messaging.Service
 {
     public interface IMessageService
     {
-        Task SendMessage<T>(T message) where T : class, IBaseMessage;
-        Task<TReturn> SendMessageWithResponse<TSend, TReturn>(TSend message)
-            where TSend : class, IBaseMessage
-            where TReturn : class, IBaseMessage;
+        Task SendMessage<T>(IMessage<T> message);
+
+        Task<IMessage<TReturn>> SendMessageWithResponse<TSend, TReturn>(IMessage<TSend> message);
     }
 }
