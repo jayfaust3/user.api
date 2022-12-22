@@ -1,5 +1,4 @@
-﻿using Common.Models.Data;
-using Common.Models.DTO;
+﻿using Common.Models.DTO;
 
 namespace Persistence.Repositories;
 

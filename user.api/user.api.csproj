@@ -58,6 +58,12 @@
     <None Remove="Messaging\Bus\" />
     <None Remove="Messaging\Service\" />
     <None Remove="Common\Models\Message\" />
+    <None Remove="Application\" />
+    <None Remove="Application\Services\" />
+    <None Remove="Application\Services\User\" />
+    <None Remove="Application\Services\User\Crud\" />
+    <None Remove="Common\Models\Message\Requests\" />
+    <None Remove="Common\Models\Message\Messages\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Common\Models\Configuration\" />
@@ -78,5 +84,11 @@
     <Folder Include="Messaging\Bus\" />
     <Folder Include="Messaging\Service\" />
     <Folder Include="Common\Models\Message\" />
+    <Folder Include="Application\" />
+    <Folder Include="Application\Services\" />
+    <Folder Include="Application\Services\User\" />
+    <Folder Include="Application\Services\User\Crud\" />
+    <Folder Include="Common\Models\Message\Requests\" />
+    <Folder Include="Common\Models\Message\Messages\" />
   </ItemGroup>
 </Project>

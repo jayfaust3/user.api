@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Common.Models.API;
 using Common.Models.DTO;
-using Persistence.Repositories;
 using System.ComponentModel.DataAnnotations;
 using Persistence.Utilities;
 using Common.Models.Data;
+using Application.Services;
 
 namespace API.Controllers;
 
@@ -12,11 +12,11 @@ namespace API.Controllers;
 [Route("users")]
 public class UserController : BaseController
 {
-    private readonly IUserRepository _repository;
+    private readonly IUserCrudService _userCrudService;
 
-    public UserController(IUserRepository repository)
+    public UserController(IUserCrudService userCrudService)
     {
-        _repository = repository;
+        _userCrudService = userCrudService;
     }
 
     [HttpPost]
@@ -24,7 +24,7 @@ public class UserController : BaseController
     {
         return await RunAsyncServiceCall
         (
-            async () => await _repository.InsertAsync(payload),
+            async () => await _userCrudService.CreateAsync(payload),
             cancellationToken,
             PostMethod
         );
@@ -36,7 +36,7 @@ public class UserController : BaseController
     {
         return await RunAsyncServiceCall
         (
-            async () => await _repository.FindOneAsync(id),
+            async () => await _userCrudService.GetByIdAsync(id),
             cancellationToken,
             GetMethod
         );
@@ -51,7 +51,7 @@ public class UserController : BaseController
             async () => {
                 PageToken parsedToken = PagingUtilities.ParsePageToken(pageToken);
 
-                return await _repository.FindAllAsync(parsedToken);
+                return await _userCrudService.GetAllAsync(parsedToken);
             },
             cancellationToken,
             GetMethod

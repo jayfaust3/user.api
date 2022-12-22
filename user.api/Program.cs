@@ -5,6 +5,7 @@ using Persistence.Repositories;
 using RabbitMQ.Client;
 using Common.Models.Configuration;
 using System.Reflection;
+using Application.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +20,10 @@ builder.Services.AddSingleton<IOpenSearchSettings>
 );
 builder.Services.AddTransient<IUserRepository, UserRepository>();
 //db
+
+//services
+builder.Services.AddTransient<IUserCrudService, UserCrudService>();
+//services
 
 //messaging
 var rabbitHost = Environment.GetEnvironmentVariable("RABBITMQ_HOST");
