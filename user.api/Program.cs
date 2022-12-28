@@ -7,8 +7,12 @@ using Common.Models.Configuration;
 using System.Reflection;
 using Application.Services.Crud;
 using Application.Services.Cache;
+using Common.Models.Context;
+using Microsoft.AspNetCore.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddScoped<IUserContext, UserContext>();
 
 //db
 builder.Services.AddSingleton<IOpenSearchSettings>
@@ -84,6 +88,8 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
+
+app.UseMiddleware<AuthorizationMiddleware>();
 
 app.UseCors(builder =>
 {

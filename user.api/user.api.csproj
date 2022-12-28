@@ -64,6 +64,8 @@
     <None Remove="Common\Models\Message\Messages\" />
     <None Remove="Application\Services\Cache\" />
     <None Remove="Application\Services\Crud\" />
+    <None Remove="Middleware\" />
+    <None Remove="Common\Models\Context\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Common\Models\Configuration\" />
@@ -90,5 +92,7 @@
     <Folder Include="Common\Models\Message\Messages\" />
     <Folder Include="Application\Services\Cache\" />
     <Folder Include="Application\Services\Crud\" />
+    <Folder Include="Middleware\" />
+    <Folder Include="Common\Models\Context\" />
   </ItemGroup>
 </Project>
