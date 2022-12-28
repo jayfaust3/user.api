@@ -5,7 +5,8 @@ using Persistence.Repositories;
 using RabbitMQ.Client;
 using Common.Models.Configuration;
 using System.Reflection;
-using Application.Services;
+using Application.Services.Crud;
+using Application.Services.Cache;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +23,7 @@ builder.Services.AddTransient<IUserRepository, UserRepository>();
 //db
 
 //services
+builder.Services.AddTransient<ICacheService, MemoryCacheService>();
 builder.Services.AddTransient<IUserCrudService, UserCrudService>();
 //services
 
@@ -65,6 +67,7 @@ builder.Services.AddMassTransit(_ =>
 });
 //messaging
 
+builder.Services.AddMemoryCache();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

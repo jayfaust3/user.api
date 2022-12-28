@@ -1,4 +1,4 @@
-﻿using Application.Services;
+﻿using Application.Services.Crud;
 using Common.Models.DTO;
 using Common.Models.Message;
 using Common.Models.Message.Requests;
