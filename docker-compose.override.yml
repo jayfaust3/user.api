@@ -5,6 +5,8 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=https://+:443;http://+:80
+      - AUTH_ISSUER=accounts.google.com
+      - AUTH_AUDIENCE=593080116652-b3nl1jjpf7ke5p294p0atco72eu8dflk.apps.googleusercontent.com
       - RABBITMQ_HOST=amqp://rabbit-mq
       - RABBITMQ_VIRTUAL_HOST=/
       - RABBITMQ_PORT=5672

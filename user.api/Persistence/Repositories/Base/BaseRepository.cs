@@ -1,4 +1,5 @@
 ﻿using Common.Models.Configuration;
+using Common.Models.Context;
 using Common.Models.Data;
 using Common.Models.DTO;
 using Elastic.Clients.Elasticsearch;
@@ -13,11 +14,13 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO>
 {
     private readonly string _indexName;
     private readonly ElasticsearchClient _client;
-    
-    protected BaseRepository(IOpenSearchSettings settings)
+    private readonly IUserContext _userContext;
+
+    protected BaseRepository(IOpenSearchSettings settings, IUserContext userContext)
     {
         _indexName = settings.IndexName;
         _client = GenerateClient(settings);
+        _userContext = userContext;
     }
 
     private static ElasticsearchClient GenerateClient(IOpenSearchSettings settings)

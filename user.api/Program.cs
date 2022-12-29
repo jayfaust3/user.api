@@ -9,6 +9,7 @@ using Application.Services.Crud;
 using Application.Services.Cache;
 using Common.Models.Context;
 using Microsoft.AspNetCore.Authorization;
+using Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -85,18 +86,18 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
-
-app.UseAuthorization();
-
-app.UseMiddleware<AuthorizationMiddleware>();
-
 app.UseCors(builder =>
 {
     builder.AllowAnyOrigin()
            .AllowAnyMethod()
            .AllowAnyHeader();
 });
+
+app.UseHttpsRedirection();
+
+app.UseAuthorization();
+
+app.UseMiddleware<AuthMiddleware>();
 
 app.MapControllers();
 

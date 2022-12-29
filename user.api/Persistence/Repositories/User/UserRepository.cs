@@ -1,15 +1,13 @@
 ﻿using Common.Models.Configuration;
+using Common.Models.Context;
 using Common.Models.Data;
 using Common.Models.DTO;
-using Elastic.Clients.Elasticsearch;
-using Elastic.Clients.Elasticsearch.QueryDsl;
-using Elastic.Transport;
 
 namespace Persistence.Repositories;
 
 public class UserRepository : BaseRepository<UserEntity, UserDTO>, IUserRepository
 {
-	public UserRepository(IOpenSearchSettings settings) : base(settings) {}
+	public UserRepository(IOpenSearchSettings settings, IUserContext userContext) : base(settings, userContext) {}
 
     protected override UserEntity MapToEntity(UserDTO dto)
     {

@@ -15,10 +15,11 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
     <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="6.4.0" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="6.4.0" />
-    <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.0.3" />
+    <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.0.4" />
     <PackageReference Include="MassTransit" Version="8.0.9" />
     <PackageReference Include="RabbitMQ.Client" Version="6.4.0" />
     <PackageReference Include="MassTransit.RabbitMQ" Version="8.0.9" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.25.1" />
   </ItemGroup>
 
   <ItemGroup>
@@ -66,6 +67,7 @@
     <None Remove="Application\Services\Crud\" />
     <None Remove="Middleware\" />
     <None Remove="Common\Models\Context\" />
+    <None Remove="System.IdentityModel.Tokens.Jwt" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Common\Models\Configuration\" />
