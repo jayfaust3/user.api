@@ -1,8 +1,9 @@
-version: '3.4'
+version: '3.8'
 
 services:
   user.api:
-    image: ${DOCKER_REGISTRY-}user
+    image: user-api
+    container_name: user-api
     build:
       context: .
       dockerfile: user.api/Dockerfile

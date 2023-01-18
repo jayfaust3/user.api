@@ -2,6 +2,11 @@ version: '3.8'
 
 services:
   user.api:
+    image: user-api
+    container_name: user-api
+    build:
+      context: .
+      dockerfile: user.api/Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=https://+:443;http://+:80
