@@ -8,18 +8,18 @@ services:
       context: .
       dockerfile: user.api/Dockerfile
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=https://+:443;http://+:80
-      - AUTH_ISSUER=accounts.google.com
-      - AUTH_AUDIENCE=593080116652-b3nl1jjpf7ke5p294p0atco72eu8dflk.apps.googleusercontent.com
-      - RABBITMQ_HOST=amqp://rabbit-mq
-      - RABBITMQ_VIRTUAL_HOST=/
-      - RABBITMQ_PORT=5672
-      - RABBITMQ_USERNAME=guest
-      - RABBITMQ_PASSWORD=guest
-      - SERVICE_CALL_RETRY_COUNT=3
-      - OPENSEARCH_NODE_URIS=http://opensearch-master-node:9200
-      - OPENSEARCH_USER_INDEX_NAME=users
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
+      - ASPNETCORE_URLS=${ASPNETCORE_URLS}
+      - AUTH_ISSUER=${AUTH_ISSUER}
+      - AUTH_AUDIENCE=${AUTH_AUDIENCE}
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - RABBITMQ_VIRTUAL_HOST=${RABBITMQ_VIRTUAL_HOST}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+      - RABBITMQ_USERNAME=${RABBITMQ_USERNAME}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - SERVICE_CALL_RETRY_COUNT=${SERVICE_CALL_RETRY_COUNT}
+      - OPENSEARCH_NODE_URIS=${OPENSEARCH_NODE_URIS}
+      - OPENSEARCH_USER_INDEX_NAME=${OPENSEARCH_USER_INDEX_NAME}
     ports:
       - 5190:80
       - 7076:443
