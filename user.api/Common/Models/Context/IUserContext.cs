@@ -2,6 +2,6 @@
 {
     public interface IUserContext
     {
-        Guid Id { get; set; }
+        Guid? Id { get; set; }
     }
 }

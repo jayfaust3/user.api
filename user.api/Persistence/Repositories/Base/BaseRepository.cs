@@ -59,7 +59,10 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO>
         (
             name =>
                 name != "id" &&
-                name != "created_on"
+                name != "created_on" &&
+                name != "updated_on" &&
+                name != "created_by" &&
+                name != "updated_by"
         );
 
     protected virtual GetRequest GenerateFindOneGetRequest(Guid id) => new GetRequest(_indexName, id);
@@ -101,6 +104,7 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO>
 
         entity.id = Guid.NewGuid();
         entity.created_on = GetUnixEpoch();
+        entity.updated_by = _userContext.Id;
 
         var request = new IndexRequest<TEntity>(entity);
 

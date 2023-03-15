@@ -4,9 +4,19 @@ services:
   user.api:
     image: user-api
     container_name: user-api
+    hostname: user-api
     build:
       context: .
       dockerfile: user.api/Dockerfile
+    ports:
+      - 5190:80
+      - 7076:443
+    volumes:
+      - ~/.aspnet/https:/root/.aspnet/https:ro
+      - ~/.microsoft/usersecrets:/root/.microsoft/usersecrets:ro
+    restart: always
+    env_file:
+        - .env
     environment:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
       - ASPNETCORE_URLS=${ASPNETCORE_URLS}
@@ -20,13 +30,6 @@ services:
       - SERVICE_CALL_RETRY_COUNT=${SERVICE_CALL_RETRY_COUNT}
       - OPENSEARCH_NODE_URIS=${OPENSEARCH_NODE_URIS}
       - OPENSEARCH_USER_INDEX_NAME=${OPENSEARCH_USER_INDEX_NAME}
-    ports:
-      - 5190:80
-      - 7076:443
-    volumes:
-      - ~/.aspnet/https:/root/.aspnet/https:ro
-      - ~/.microsoft/usersecrets:/root/.microsoft/usersecrets:ro
-    restart: always
 
 networks:
   default:

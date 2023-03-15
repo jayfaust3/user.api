@@ -8,7 +8,6 @@ using System.Reflection;
 using Application.Services.Crud;
 using Application.Services.Cache;
 using Common.Models.Context;
-using Microsoft.AspNetCore.Authorization;
 using Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,12 +15,22 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddScoped<IUserContext, UserContext>();
 
 //db
+var openSearchNodeURIs = Environment.GetEnvironmentVariable("OPENSEARCH_NODE_URIS")?
+    .Split(';') ??
+    Array.Empty<string>();
+var opensearchUserIndexName = Environment.GetEnvironmentVariable("OPENSEARCH_USER_INDEX_NAME");
+if (
+    openSearchNodeURIs.Count() == 0 ||
+    string.IsNullOrWhiteSpace(opensearchUserIndexName)
+) throw new Exception("Missing OpenSearchCredentials");
+
+
 builder.Services.AddSingleton<IOpenSearchSettings>
 (
     new OpenSearchSettings
     (
-        Environment.GetEnvironmentVariable("OPENSEARCH_NODE_URIS")?.Split(';') ?? Array.Empty<string>(),
-        Environment.GetEnvironmentVariable("OPENSEARCH_USER_INDEX_NAME") ?? ""
+        openSearchNodeURIs,
+        opensearchUserIndexName
     )
 );
 builder.Services.AddTransient<IUserRepository, UserRepository>();
@@ -35,14 +44,15 @@ builder.Services.AddTransient<IUserCrudService, UserCrudService>();
 //messaging
 var rabbitHost = Environment.GetEnvironmentVariable("RABBITMQ_HOST");
 var rabbitVirtualHost = Environment.GetEnvironmentVariable("RABBITMQ_VIRTUAL_HOST") ?? "/";
-var rabbitPort = int.Parse(Environment.GetEnvironmentVariable("RABBITMQ_PORT") ?? "5672");
+var isRabbitPortSet = int.TryParse(Environment.GetEnvironmentVariable("RABBITMQ_PORT"), out int rabbitPort);
 var rabbitUser = Environment.GetEnvironmentVariable("RABBITMQ_USERNAME");
 var rabbitPassword = Environment.GetEnvironmentVariable("RABBITMQ_PASSWORD");
 
 if (
     string.IsNullOrWhiteSpace(rabbitHost) ||
     string.IsNullOrWhiteSpace(rabbitUser) ||
-    string.IsNullOrWhiteSpace(rabbitPassword)
+    string.IsNullOrWhiteSpace(rabbitPassword) ||
+    !isRabbitPortSet
 ) throw new Exception("Missing RabbitMQ Credentials");
 
 builder.Services.AddTransient<IConnectionFactory>(_ => new ConnectionFactory
@@ -55,20 +65,26 @@ builder.Services.AddTransient<IConnectionFactory>(_ => new ConnectionFactory
 });
 builder.Services.AddSingleton<IHostedService, BusService>();
 builder.Services.AddTransient<IMessageService, MessageService>();
-builder.Services.AddMassTransit(_ =>
+builder.Services.AddMassTransit(registrationConfigurator =>
 {
-    _.AddBus(registrationContext => Bus.Factory.CreateUsingRabbitMq(cfg =>
-    {
-        cfg.Host(new Uri(rabbitHost), h =>
-        {
-            h.Username(rabbitUser);
-            h.Password(rabbitPassword);
-        });
-        cfg.ConfigureEndpoints(registrationContext);
-        cfg.AutoDelete = true;
-    }));
+    registrationConfigurator.AddBus(
+        registrationContext =>
+            Bus.Factory.CreateUsingRabbitMq(
+                configure =>
+                {
+                    configure.Host(
+                        new Uri(rabbitHost), hostConfigurator =>
+                        {
+                            hostConfigurator.Username(rabbitUser);
+                            hostConfigurator.Password(rabbitPassword);
+                        });
+                        configure.ConfigureEndpoints(registrationContext);
+                        configure.AutoDelete = true;
+                }
+            )
+    );
 
-    _.AddConsumers(Assembly.GetExecutingAssembly());
+    registrationConfigurator.AddConsumers(Assembly.GetExecutingAssembly());
 });
 //messaging
 

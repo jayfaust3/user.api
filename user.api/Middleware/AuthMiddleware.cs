@@ -3,6 +3,8 @@ using Microsoft.Extensions.Primitives;
 using System.Net;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using Application.Services.Crud;
+using Common.Models.DTO;
 
 namespace Middleware;
 
@@ -15,14 +17,14 @@ public class AuthMiddleware
         _next = next;
     }
 
-    public async Task Invoke(HttpContext context, IUserContext userContext)
+    public async Task Invoke(HttpContext httpContext, IUserContext userContext)
     {
         var authTokenHeader =
-            context.Request.Headers["Authorization"];
+            httpContext.Request.Headers["Authorization"];
 
         if (StringValues.IsNullOrEmpty(authTokenHeader))
         {
-            SetResponseStatausAsUnauthorized(context);
+            SetResponseStatausAsUnauthorized(httpContext);
             return;
         }
 
@@ -32,24 +34,24 @@ public class AuthMiddleware
 
         if (authTokenParts.Length != 2)
         {
-            SetResponseStatausAsUnauthorized(context);
+            SetResponseStatausAsUnauthorized(httpContext);
             return;
         }
 
         var token = new JwtSecurityToken(authTokenParts[1]);
 
-        bool tokenIsValid = ValidateAuthTokenAndSetContext(token, userContext);
+        bool tokenIsValid = await ValidateAuthTokenAndSetContext(httpContext, token, userContext);
 
         if (!tokenIsValid)
         {
-            SetResponseStatausAsUnauthorized(context);
+            SetResponseStatausAsUnauthorized(httpContext);
             return;
         }
 
-        await _next.Invoke(context);
+        await _next.Invoke(httpContext);
     }
 
-    private static bool ValidateAuthTokenAndSetContext(JwtSecurityToken token, IUserContext userContext)
+    private async static Task<bool> ValidateAuthTokenAndSetContext(HttpContext httpContext, JwtSecurityToken token, IUserContext userContext)
     {
         var tokenExpiry = GetTokenExpiry(token);
         if (!tokenExpiry.HasValue || tokenExpiry <= DateTimeOffset.Now) return false;
@@ -58,6 +60,20 @@ public class AuthMiddleware
 
         var tokenAudience = Environment.GetEnvironmentVariable("AUTH_AUDIENCE");
         if (!token.Audiences.Contains(tokenAudience)) return false;
+
+        var emailClaimValue = token.Claims.First(c => c.Type == "email")?.Value;
+        if (!string.IsNullOrWhiteSpace(emailClaimValue))
+        {
+            var userService = httpContext.RequestServices.GetService<IUserCrudService>();
+
+            UserDTO? user = await userService?.GetByEmailAsync(emailClaimValue);
+
+            if (user != null)
+            {
+                userContext.Id = user?.Id;
+            }
+            
+        }
 
         return true;
     }
