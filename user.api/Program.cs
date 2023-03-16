@@ -20,7 +20,7 @@ var openSearchNodeURIs = Environment.GetEnvironmentVariable("OPENSEARCH_NODE_URI
     Array.Empty<string>();
 var opensearchUserIndexName = Environment.GetEnvironmentVariable("OPENSEARCH_USER_INDEX_NAME");
 if (
-    openSearchNodeURIs.Count() == 0 ||
+    openSearchNodeURIs.Length == 0 ||
     string.IsNullOrWhiteSpace(opensearchUserIndexName)
 ) throw new Exception("Missing OpenSearchCredentials");
 
