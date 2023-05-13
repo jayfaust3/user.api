@@ -80,7 +80,7 @@ builder.Services.AddMassTransit(registrationConfigurator =>
                         });
                         configure.ConfigureEndpoints(registrationContext);
                         configure.AutoDelete = true;
-
+                    configure.UseRawJsonSerializer(isDefault: true);
                     configure.UseRawJsonDeserializer(isDefault: true);
                 }
             )

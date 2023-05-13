@@ -3,6 +3,7 @@ using Common.Models.DTO;
 using Common.Models.Message;
 using Common.Models.Message.Requests;
 using MassTransit;
+using RabbitMQ.Client;
 
 namespace API.Consumers;
 
@@ -10,7 +11,7 @@ public class GetUserByEmailConsumer : BaseConsumer<GetUserByEmailRequest, UserDT
 {
     private readonly IUserCrudService _userCrudService;
 
-    public GetUserByEmailConsumer(IUserCrudService userCrudService)
+    public GetUserByEmailConsumer(IConnectionFactory connectionFactory, IUserCrudService userCrudService) : base(connectionFactory)
 	{
         _userCrudService = userCrudService;
     }
