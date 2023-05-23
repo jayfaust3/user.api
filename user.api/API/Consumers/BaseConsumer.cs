@@ -30,18 +30,15 @@ public abstract class BaseConsumer<TSend, TResponse> : IConsumer<IMessage<TSend>
 
         RabbitMqReceiveContext receiveContext = context.ReceiveContext as RabbitMqReceiveContext;
 
-        var exchange = receiveContext.Exchange;
-
         IBasicProperties receiveProperties = receiveContext.Properties;
         var replyTo = receiveProperties.ReplyTo;
-        
 
         IBasicProperties sendProperties = _channel.CreateBasicProperties();
         sendProperties.CorrelationId = receiveProperties.CorrelationId;
 
         var messageBytes = ConvertToBytes(responseMessage);
 
-        _channel.BasicPublish(exchange: exchange,
+        _channel.BasicPublish(exchange: replyTo,
                              routingKey: replyTo,
                              basicProperties: sendProperties,
                              body: messageBytes);
