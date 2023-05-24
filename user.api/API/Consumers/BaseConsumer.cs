@@ -30,9 +30,10 @@ public abstract class BaseConsumer<TSend, TResponse> : IConsumer<IMessage<TSend>
 
         RabbitMqReceiveContext receiveContext = context.ReceiveContext as RabbitMqReceiveContext;
 
-        var exchange = receiveContext.Exchange;
+        // var exchange = receiveContext.Exchange;
 
         IBasicProperties receiveProperties = receiveContext.Properties;
+        var exchange = receiveProperties.ReplyTo;
         var routingKey = receiveProperties.ReplyTo;
 
         IBasicProperties sendProperties = _channel.CreateBasicProperties();
