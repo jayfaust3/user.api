@@ -2,7 +2,6 @@
 
 using System.Text;
 using System.Text.Json;
-using System.Threading.Channels;
 using Common.Models.Message;
 using MassTransit;
 using MassTransit.RabbitMqTransport;
