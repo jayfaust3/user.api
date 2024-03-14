@@ -1,4 +1,4 @@
-﻿using Common.Models.Configuration;
+﻿using Clients.Elasticsearch;
 using Common.Models.Context;
 using Common.Models.Data;
 using Common.Models.DTO;
@@ -7,7 +7,7 @@ namespace Persistence.Repositories;
 
 public class UserRepository : BaseRepository<UserEntity, UserDTO>, IUserRepository
 {
-	public UserRepository(IOpenSearchSettings settings, IUserContext userContext) : base(settings, userContext) {}
+	public UserRepository(IElasticsearchClient client, IUserContext userContext) : base(client, userContext) {}
 
     protected override UserEntity MapToEntity(UserDTO dto)
     {

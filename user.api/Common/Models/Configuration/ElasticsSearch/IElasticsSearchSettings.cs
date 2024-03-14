@@ -1,6 +1,6 @@
 ﻿namespace Common.Models.Configuration;
 
-public interface IOpenSearchSettings
+public interface IElasticsSearchSettings
 {
     IEnumerable<string> NodeURIs { get; }
     string IndexName { get; }

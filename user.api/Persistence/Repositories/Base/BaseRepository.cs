@@ -1,4 +1,4 @@
-﻿using Common.Models.Configuration;
+﻿using Clients.Elasticsearch;
 using Common.Models.Context;
 using Common.Models.Data;
 using Common.Models.DTO;
@@ -12,35 +12,15 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO>
     where TEntity : class, IEntity
     where TDTO : class, IDTO
 {
-    private readonly string _indexName;
-    private readonly ElasticsearchClient _client;
+    private readonly IElasticsearchClient _client;
     private readonly IUserContext _userContext;
 
-    protected BaseRepository(IOpenSearchSettings settings, IUserContext userContext)
+    protected BaseRepository(IElasticsearchClient client, IUserContext userContext)
     {
-        _indexName = settings.IndexName;
-        _client = GenerateClient(settings);
+        _client = client;
         _userContext = userContext;
     }
 
-    private static ElasticsearchClient GenerateClient(IOpenSearchSettings settings)
-    {
-        var nodeURIs = settings.NodeURIs.Select(uri => new Uri(uri));
-
-        var pool = new StaticNodePool(nodeURIs);
-
-        var connectionSettings = new ElasticsearchClientSettings(pool)
-            .DefaultMappingFor<TEntity>
-            (
-                m =>
-                {
-                    m.IndexName(settings.IndexName);
-                    m = m.IdProperty("id");
-                }
-            ).DefaultIndex(settings.IndexName);
-
-        return new ElasticsearchClient(connectionSettings);
-    }
 
     private static int GetUnixEpoch() =>
         (
@@ -65,7 +45,7 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO>
                 name != "updated_by"
         );
 
-    protected virtual GetRequest GenerateFindOneGetRequest(Guid id) => new GetRequest(_indexName, id);
+    protected virtual GetRequest GenerateFindOneGetRequest(Guid id) => new GetRequest(_client.IndexName, id);
 
     protected virtual SearchRequest<TEntity> GenerateFindAllSearchRequest(PageToken pageToken)
     {

@@ -5,6 +5,7 @@ using Persistence.Repositories;
 using RabbitMQ.Client;
 using Common.Models.Configuration;
 using System.Reflection;
+using Clients.Elasticsearch;
 using Application.Services.Crud;
 using Application.Services.Cache;
 using Common.Models.Context;
@@ -25,14 +26,15 @@ if (
 ) throw new Exception("Missing OpenSearchCredentials");
 
 
-builder.Services.AddSingleton<IOpenSearchSettings>
+builder.Services.AddSingleton<IElasticsSearchSettings>
 (
-    new OpenSearchSettings
+    new ElasticsSearchSettings
     (
         openSearchNodeURIs,
         opensearchUserIndexName
     )
 );
+builder.Services.AddTransient<IElasticsearchClient, ElasticsearchClient>();
 builder.Services.AddTransient<IUserRepository, UserRepository>();
 //db
 

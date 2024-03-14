@@ -1,8 +1,8 @@
 ﻿namespace Common.Models.Configuration;
 
-public class OpenSearchSettings : IOpenSearchSettings
+public class ElasticsSearchSettings : IElasticsSearchSettings
 {
-    public OpenSearchSettings
+    public ElasticsSearchSettings
     (
         IEnumerable<string> nodeURIs,
         string indexName

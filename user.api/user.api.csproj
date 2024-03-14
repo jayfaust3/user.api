@@ -34,7 +34,6 @@
     <None Remove="OpenSearch.Client.JsonNetSerializer" />
     <None Remove="OpenSearch.Net.Auth.AwsSigV4" />
     <None Remove="Common\Models\Configuration\" />
-    <None Remove="Common\Models\Configuration\OpenSearch\" />
     <None Remove="Persistence\" />
     <None Remove="Persistence\Repositories\" />
     <None Remove="Common\Models\DTO\Base\" />
@@ -66,10 +65,12 @@
     <None Remove="Middleware\" />
     <None Remove="Common\Models\Context\" />
     <None Remove="System.IdentityModel.Tokens.Jwt" />
+    <None Remove="Clients\" />
+    <None Remove="Clients\Elasticsearch\" />
+    <None Remove="Common\Models\Configuration\ElasticsSearch\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Common\Models\Configuration\" />
-    <Folder Include="Common\Models\Configuration\OpenSearch\" />
     <Folder Include="Persistence\" />
     <Folder Include="Persistence\Repositories\" />
     <Folder Include="Common\Models\DTO\Base\" />
@@ -94,5 +95,8 @@
     <Folder Include="Application\Services\Crud\" />
     <Folder Include="Middleware\" />
     <Folder Include="Common\Models\Context\" />
+    <Folder Include="Clients\" />
+    <Folder Include="Clients\Elasticsearch\" />
+    <Folder Include="Common\Models\Configuration\ElasticsSearch\" />
   </ItemGroup>
 </Project>
