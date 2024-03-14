@@ -2,6 +2,7 @@
 using Common.Models.Context;
 using Common.Models.Data;
 using Common.Models.DTO;
+using Utilities;
 using Elastic.Clients.Elasticsearch;
 using Elastic.Clients.Elasticsearch.QueryDsl;
 
@@ -19,16 +20,6 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO>
         _client = client;
         _userContext = userContext;
     }
-
-
-    private static int GetUnixEpoch() =>
-        (
-            (int)
-            (
-                DateTime.Now.ToUniversalTime() -
-                new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
-            ).TotalMilliseconds
-        );
 
     private IEnumerable<string> GetAllSearchableFields() =>
         typeof(TEntity)
@@ -81,7 +72,7 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO>
     {
         TEntity entity = MapToEntity(dto);
 
-        var timestamp = GetUnixEpoch();
+        var timestamp = TimeUtilities.GetUnixEpoch();
         var userId = _userContext.Id;
 
         entity.id = Guid.NewGuid();

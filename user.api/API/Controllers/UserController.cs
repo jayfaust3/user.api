@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
+using Utilities;
 using Common.Models.API;
 using Common.Models.DTO;
-using System.ComponentModel.DataAnnotations;
-using Persistence.Utilities;
 using Common.Models.Data;
 using Application.Services.Crud;
 

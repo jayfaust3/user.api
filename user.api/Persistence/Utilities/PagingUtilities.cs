@@ -1,9 +1,8 @@
 ﻿using System.Text;
 using System.Text.Json;
 using Common.Models.Data;
-using Common.Models.DTO;
 
-namespace Persistence.Utilities;
+namespace Utilities;
 
 public class PagingUtilities
 {

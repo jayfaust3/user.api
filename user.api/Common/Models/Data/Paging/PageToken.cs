@@ -1,5 +1,4 @@
 ﻿using System.Text.Json.Serialization;
-using Common.Models.DTO;
 
 namespace Common.Models.Data;
 
