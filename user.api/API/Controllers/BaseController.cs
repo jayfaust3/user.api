@@ -13,6 +13,12 @@ public abstract class BaseController : ControllerBase
 
     protected const string PatchMethod = "PATCH";
 
+    private const int CreatedStatusCode = 201;
+
+    private const int NotFoundStatusCode = 404;
+
+    private const int ServerErrorStatusCode = 500;
+
     private readonly int _serviceCallRetryCount =
         int.Parse(Environment.GetEnvironmentVariable("SERVICE_CALL_RETRY_COUNT") ?? "1");
 
@@ -64,7 +70,7 @@ public abstract class BaseController : ControllerBase
             new APIResponse<TResult>(serviceResult)
         )
         {
-            StatusCode = 201
+            StatusCode = CreatedStatusCode
         };
     }
 
@@ -87,7 +93,7 @@ public abstract class BaseController : ControllerBase
             )
         )
         {
-            StatusCode = 404
+            StatusCode = NotFoundStatusCode
         };
     }
 
@@ -102,7 +108,7 @@ public abstract class BaseController : ControllerBase
             )
         )
         {
-            StatusCode = 500
+            StatusCode = ServerErrorStatusCode
         };
     }
 }
