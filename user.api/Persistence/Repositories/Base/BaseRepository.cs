@@ -26,7 +26,7 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO>
     (
         IElasticsearchClient client,
         IUserContext userContext,
-        IEnumerable<string> fieldsExcludedFromSearch
+        IEnumerable<string>? fieldsExcludedFromSearch = null
     )
     {
         _client = client;

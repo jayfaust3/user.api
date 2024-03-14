@@ -1,25 +1,28 @@
-using System;
 using Microsoft.AspNetCore.Mvc;
 using Common.Models.API;
-using System.Net.Http;
 
 namespace API.Controllers;
 
 public abstract class BaseController : ControllerBase
 {
-    protected static string GetMethod = HttpMethod.Get.Method;
+    protected const string GetMethod = "GET";
 
-    protected static string PostMethod = HttpMethod.Post.Method;
+    protected const string PostMethod = "POST";
+
+    protected const string PutMethod = "PUT";
+
+    protected const string PatchMethod = "PATCH";
 
     private readonly int _serviceCallRetryCount =
         int.Parse(Environment.GetEnvironmentVariable("SERVICE_CALL_RETRY_COUNT") ?? "1");
 
-    protected async Task<ActionResult<APIResponse<TResult>>> RunAsyncServiceCall<TResult>
+    protected async Task<ActionResult<APIResponse<TResult>>> RunAsyncServiceCall<TResult> 
     (
         Func<Task<TResult>> call,
         CancellationToken token,
         string httpMethod
     )
+        where TResult : class
     {
         ActionResult<APIResponse<TResult>> response = null;
 
@@ -29,16 +32,18 @@ public abstract class BaseController : ControllerBase
             {
                 TResult serviceResult = await Task.Run(call, token);
 
-                if (serviceResult == null)
+                switch (httpMethod)
                 {
-                    response = HandleNullResult<TResult>();
-                    break;
+                    case GetMethod:
+                        if (serviceResult == null) response = HandleNullResult<TResult>();
+                        else response = HandleNonPostResult(serviceResult);
+                        break;
+                    case PostMethod:
+                        response = HandlePostResult(serviceResult);
+                        break;
+                    default:
+                        break;
                 }
-
-                if (httpMethod == PostMethod)
-                    response = HandlePostResult(serviceResult);
-                else
-                    response = HandleNonPostResult(serviceResult);
 
                 break;
             }
@@ -52,7 +57,7 @@ public abstract class BaseController : ControllerBase
         return response;
     }
 
-    private static ActionResult<APIResponse<TResult>> HandlePostResult<TResult>(TResult serviceResult)
+    private static ActionResult<APIResponse<TResult>> HandlePostResult<TResult>(TResult serviceResult) where TResult : class
     {
         return new ObjectResult
         (
@@ -63,7 +68,7 @@ public abstract class BaseController : ControllerBase
         };
     }
 
-    private ActionResult<APIResponse<TResult>> HandleNonPostResult<TResult>(TResult serviceResult)
+    private ActionResult<APIResponse<TResult>> HandleNonPostResult<TResult>(TResult serviceResult) where TResult : class
     {
         return Ok
         (
@@ -71,13 +76,13 @@ public abstract class BaseController : ControllerBase
         );
     }
 
-    private static ActionResult<APIResponse<TResult>> HandleNullResult<TResult>()
+    private static ActionResult<APIResponse<TResult>> HandleNullResult<TResult>() where TResult : class
     {
         return new ObjectResult
         (
             new APIResponse<TResult>
             (
-                (TResult)((object)null),
+                null,
                 "Entity not found"
             )
         )
@@ -86,13 +91,13 @@ public abstract class BaseController : ControllerBase
         };
     }
 
-    private static ActionResult<APIResponse<TResult>> HandleFailureResult<TResult>(Exception exception)
+    private static ActionResult<APIResponse<TResult>> HandleFailureResult<TResult>(Exception exception) where TResult : class
     {
         return new ObjectResult
         (
             new APIResponse<TResult>
             (
-                (TResult)((object)null),
+                null,
                 exception.Message
             )
         )
