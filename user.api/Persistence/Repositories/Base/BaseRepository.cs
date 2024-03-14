@@ -13,27 +13,35 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO>
     where TDTO : class, IDTO
 {
     private readonly IElasticsearchClient _client;
+
     private readonly IUserContext _userContext;
 
-    protected BaseRepository(IElasticsearchClient client, IUserContext userContext)
+    protected readonly IEnumerable<string> _defaultFieldsExcludedFromSearch = typeof(IEntity)
+        .GetProperties()
+        .Select(p => p.Name);
+
+    private readonly HashSet<string> _fieldsExcludedFromSearch;
+
+    protected BaseRepository
+    (
+        IElasticsearchClient client,
+        IUserContext userContext,
+        IEnumerable<string> fieldsExcludedFromSearch
+    )
     {
         _client = client;
         _userContext = userContext;
+        _fieldsExcludedFromSearch = new HashSet<string>
+        (
+            fieldsExcludedFromSearch ?? _defaultFieldsExcludedFromSearch
+        );
     }
 
     private IEnumerable<string> GetAllSearchableFields() =>
         typeof(TEntity)
         .GetProperties()
         .Select(p => p.Name)
-        .Where
-        (
-            name =>
-                name != "id" &&
-                name != "created_on" &&
-                name != "updated_on" &&
-                name != "created_by" &&
-                name != "updated_by"
-        );
+        .Where(field => !_fieldsExcludedFromSearch.Contains(field));
 
     protected virtual GetRequest GenerateFindOneGetRequest(Guid id) => new GetRequest(_client.IndexName, id);
 
