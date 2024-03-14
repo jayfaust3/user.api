@@ -4,7 +4,6 @@ using Common.Models.Data;
 using Common.Models.DTO;
 using Elastic.Clients.Elasticsearch;
 using Elastic.Clients.Elasticsearch.QueryDsl;
-using Elastic.Transport;
 
 namespace Persistence.Repositories;
 
@@ -82,9 +81,14 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO>
     {
         TEntity entity = MapToEntity(dto);
 
+        var timestamp = GetUnixEpoch();
+        var userId = _userContext.Id;
+
         entity.id = Guid.NewGuid();
-        entity.created_on = GetUnixEpoch();
-        entity.updated_by = _userContext.Id;
+        entity.created_on = timestamp;
+        entity.updated_on = timestamp;
+        entity.created_by = userId;
+        entity.updated_by = userId;
 
         var request = new IndexRequest<TEntity>(entity);
 
