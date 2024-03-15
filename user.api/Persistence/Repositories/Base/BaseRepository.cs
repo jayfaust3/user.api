@@ -120,7 +120,7 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO>
 
         SearchRequest<TEntity> request = GenerateFindAllSearchRequest(pageToken);
 
-        SearchResponse<TEntity> response = await _client.SearchAsync<TEntity>(request);
+        SearchResponse<TEntity> response = await _client.SearchAsync(request);
 
         if (response.IsSuccess())
             results = response.Documents.Select(MapToDTO);
