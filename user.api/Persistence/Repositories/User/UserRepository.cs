@@ -7,28 +7,29 @@ namespace Persistence.Repositories;
 
 public class UserRepository : BaseRepository<UserEntity, UserDTO>, IUserRepository
 {
-	public UserRepository(IElasticsearchClient client, IUserContext userContext) : base(client, userContext) {}
+	public UserRepository
+    (
+        IElasticsearchClient client,
+        IUserContext userContext
+    ) : base
+    (
+        client,
+        userContext
+    ) {}
 
-    protected override UserEntity MapToEntity(UserDTO dto)
+    protected override UserEntity MapToEntity(UserDTO dto) => new UserEntity
     {
-        return new UserEntity
-        {
-            first_name = dto.FirstName,
-            last_name = dto.LastName,
-            email_address = dto.EmailAddress
-        };
-    }
+        first_name = dto.FirstName,
+        last_name = dto.LastName,
+        email_address = dto.EmailAddress
+    };
 
-    protected override UserDTO MapToDTO(UserEntity dto)
+    protected override UserDTO MapToDTO(UserEntity dto) => new UserDTO
     {
-        return new UserDTO
-        {
-            Id = dto.id,
-            CreatedOn = dto.created_on,
-            FirstName = dto.first_name,
-            LastName = dto.last_name,
-            EmailAddress = dto.email_address
-        };
-    }
+        Id = dto.id,
+        CreatedOn = dto.created_on,
+        FirstName = dto.first_name,
+        LastName = dto.last_name,
+        EmailAddress = dto.email_address
+    };
 }
-
