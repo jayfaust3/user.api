@@ -93,40 +93,37 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO>
 
         IndexResponse response = await _client.IndexAsync(request);
 
-        if (!response.IsSuccess()) throw response.ApiCallDetails.OriginalException;
+        if (!response.IsSuccess())
+            throw response.ApiCallDetails.OriginalException;
 
         return MapToDTO(entity);
     }
 
     public async Task<TDTO?> FindOneAsync(Guid id)
     {
-        TEntity? match = null;
-
         GetRequest request = GenerateFindOneGetRequest(id);
 
         GetResponse<TEntity> response = await _client.GetAsync<TEntity>(request);
 
-        if (response.IsSuccess())
-            match = response.Source;
-        else
+        if (!response.IsSuccess())
             throw response.ApiCallDetails.OriginalException;
+
+        TEntity? match = response.Source;            
 
         return match != null ? MapToDTO(match) : null;
     }
 
     public async Task<IEnumerable<TDTO>> FindAllAsync(PageToken pageToken)
     {
-        IEnumerable<TDTO> results = new List<TDTO>();
-
         SearchRequest<TEntity> request = GenerateFindAllSearchRequest(pageToken);
 
         SearchResponse<TEntity> response = await _client.SearchAsync(request);
 
-        if (response.IsSuccess())
-            results = response.Documents.Select(MapToDTO);
-        else
+        if (!response.IsSuccess())
             throw response.ApiCallDetails.OriginalException;
 
-        return results;
+        IReadOnlyCollection<TEntity> matches = response.Documents;
+
+        return matches.Select(MapToDTO);            
     }
 }
