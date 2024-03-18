@@ -23,7 +23,7 @@ var opensearchUserIndexName = Environment.GetEnvironmentVariable("OPENSEARCH_USE
 if (
     openSearchNodeURIs.Length == 0 ||
     string.IsNullOrWhiteSpace(opensearchUserIndexName)
-) throw new Exception("Missing OpenSearchCredentials");
+) throw new Exception("Missing OpenSearch Credentials");
 
 
 builder.Services.AddSingleton<IElasticsSearchSettings>

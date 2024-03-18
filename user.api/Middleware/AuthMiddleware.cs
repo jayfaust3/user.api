@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Primitives;
 using System.Net;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using Application.Services.Crud;
 using Common.Models.DTO;
 
