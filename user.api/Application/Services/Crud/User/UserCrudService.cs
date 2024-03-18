@@ -8,7 +8,16 @@ namespace Application.Services.Crud;
 public class UserCrudService : BaseCrudService<UserDTO>, IUserCrudService
 {
 
-    public UserCrudService(IUserRepository userRepository, ICacheService cacheService) : base(userRepository, cacheService) {}
+    public UserCrudService
+    (
+        IUserRepository userRepository,
+        ICacheService cacheService
+    ) :
+    base
+    (
+        userRepository,
+        cacheService
+    ) {}
 
     public async Task<UserDTO?> GetByEmailAsync(string email)
     {

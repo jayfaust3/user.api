@@ -1,7 +1,7 @@
-﻿using Common.Models.Context;
-using Microsoft.Extensions.Primitives;
+﻿using Microsoft.Extensions.Primitives;
 using System.Net;
 using System.IdentityModel.Tokens.Jwt;
+using Common.Models.Context;
 using Application.Services.Crud;
 using Common.Models.DTO;
 
@@ -18,28 +18,18 @@ public class AuthMiddleware
 
     public async Task Invoke(HttpContext httpContext, IUserContext userContext)
     {
-        var authTokenHeader =
+        var authorizationHeaderValue =
             httpContext.Request.Headers["Authorization"];
 
-        if (StringValues.IsNullOrEmpty(authTokenHeader))
+        if (StringValues.IsNullOrEmpty(authorizationHeaderValue))
         {
             SetResponseStatausAsUnauthorized(httpContext);
             return;
         }
 
-        var authTokenString = authTokenHeader.ToString();
+        var token = await ExtractTokenFromAuthorizationHeaderValue(authorizationHeaderValue, httpContext);
 
-        var authTokenParts = authTokenString.Split(' ');
-
-        if (authTokenParts.Length != 2)
-        {
-            SetResponseStatausAsUnauthorized(httpContext);
-            return;
-        }
-
-        var token = new JwtSecurityToken(authTokenParts[1]);
-
-        bool tokenIsValid = await ValidateAuthTokenAndSetContext(httpContext, token, userContext);
+        bool tokenIsValid = token != null ? await ValidateAuthTokenAndSetContext(httpContext, token, userContext) : false;
 
         if (!tokenIsValid)
         {
@@ -48,6 +38,18 @@ public class AuthMiddleware
         }
 
         await _next.Invoke(httpContext);
+    }
+
+    private async Task<JwtSecurityToken?> ExtractTokenFromAuthorizationHeaderValue(string authorizationHeaderValue, HttpContext httpContext)
+    {
+        JwtSecurityToken? token = null;
+
+        var authTokenParts = authorizationHeaderValue.Split(' ');
+
+        if (authTokenParts.Length == 2)
+            token = new JwtSecurityToken(authTokenParts[1]);
+
+        return token;
     }
 
     private async static Task<bool> ValidateAuthTokenAndSetContext(HttpContext httpContext, JwtSecurityToken token, IUserContext userContext)
@@ -65,13 +67,15 @@ public class AuthMiddleware
         {
             var userService = httpContext.RequestServices.GetService<IUserCrudService>();
 
-            UserDTO? user = await userService?.GetByEmailAsync(emailClaimValue);
-
-            if (user != null)
+            if (userService != null)
             {
-                userContext.Id = user?.Id;
-            }
-            
+                UserDTO? user = await userService.GetByEmailAsync(emailClaimValue);
+
+                if (user != null)
+                {
+                    userContext.Id = user?.Id;
+                }
+            }            
         }
 
         return true;
