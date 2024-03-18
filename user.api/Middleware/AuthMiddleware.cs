@@ -18,23 +18,26 @@ public class AuthMiddleware
 
     public async Task Invoke(HttpContext httpContext, IUserContext userContext)
     {
-        var authorizationHeaderValue =
+        if (!bool.Parse(Environment.GetEnvironmentVariable("DISABLE_AUTH") ?? "false"))
+        {
+            var authorizationHeaderValue =
             httpContext.Request.Headers["Authorization"];
 
-        if (StringValues.IsNullOrEmpty(authorizationHeaderValue))
-        {
-            SetResponseStatausAsUnauthorized(httpContext);
-            return;
-        }
+            if (StringValues.IsNullOrEmpty(authorizationHeaderValue))
+            {
+                SetResponseStatausAsUnauthorized(httpContext);
+                return;
+            }
 
-        var token = await ExtractTokenFromAuthorizationHeaderValue(authorizationHeaderValue, httpContext);
+            var token = await ExtractTokenFromAuthorizationHeaderValue(authorizationHeaderValue, httpContext);
 
-        bool tokenIsValid = token != null ? await ValidateAuthTokenAndSetContext(httpContext, token, userContext) : false;
+            bool tokenIsValid = token != null ? await ValidateAuthTokenAndSetContext(httpContext, token, userContext) : false;
 
-        if (!tokenIsValid)
-        {
-            SetResponseStatausAsUnauthorized(httpContext);
-            return;
+            if (!tokenIsValid)
+            {
+                SetResponseStatausAsUnauthorized(httpContext);
+                return;
+            }
         }
 
         await _next.Invoke(httpContext);
