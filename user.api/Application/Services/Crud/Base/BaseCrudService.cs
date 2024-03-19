@@ -4,6 +4,7 @@ using Common.Models.DTO;
 using Common.Utilities;
 using Persistence.Repositories;
 using Application.Services.Cache;
+using Common.Exceptions;
 
 namespace Application.Services.Crud;
 
@@ -46,8 +47,17 @@ public abstract class BaseCrudService<TDTO> : ICrudService<TDTO> where TDTO : cl
 
         if (matches == null)
         {
-            PageToken parsedToken = PagingUtilities.ParsePageToken(pageToken);
+            PageToken parsedToken = null;
 
+            try
+            {
+                parsedToken = PagingUtilities.ParsePageToken(pageToken);
+            }
+            catch (Exception ex)
+            {
+                throw new BadRequestException($"Unable to parse page token, error: '{ex.Message}'");
+            }
+            
             matches = await _repository.FindAllAsync(parsedToken);
 
             await _cacheService.SetItemAsync(pageToken, matches);
@@ -67,11 +77,23 @@ public abstract class BaseCrudService<TDTO> : ICrudService<TDTO> where TDTO : cl
         return matches;
     }
 
-    public virtual async Task<TDTO> CreateAsync(TDTO recordToCreate) =>
-        await _repository.InsertAsync(recordToCreate);
+    public virtual async Task<TDTO> CreateAsync(TDTO recordToCreate)
+    {
+        var cacheKey = GetSingleEntryCacheKey(recordToCreate.Id.Value);
 
-    public virtual async Task<TDTO> UpdateAsync(TDTO recordToUpdate) =>
-        await _repository.UpdateAsync(recordToUpdate);
+        await _cacheService.RemoveItemAsync<TDTO>(cacheKey);
+
+        return await _repository.InsertAsync(recordToCreate);
+    }
+
+    public virtual async Task<TDTO> UpdateAsync(TDTO recordToUpdate)
+    {
+        var cacheKey = GetSingleEntryCacheKey(recordToUpdate.Id.Value);
+
+        await _cacheService.RemoveItemAsync<TDTO>(cacheKey);
+
+        return await _repository.UpdateAsync(recordToUpdate);
+    }
 
     protected abstract string GetSingleEntryCacheKey(Guid id);
 

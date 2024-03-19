@@ -16,6 +16,8 @@ public abstract class BaseController : ControllerBase
 
     protected const int CreatedStatusCode = 201;
 
+    protected const int BadRequestStatusCode = 400;
+
     protected const int NotFoundStatusCode = 404;
 
     protected const int ConflictStatusCode = 409;
@@ -70,6 +72,12 @@ public abstract class BaseController : ControllerBase
             }
             catch(Exception ex)
             {
+                if (ex is BadRequestException)
+                {
+                    response = HandleFailureResult<TResult?>(httpMethod, ex, BadRequestStatusCode);
+                    break;
+                }
+
                 if (ex is NotFoundException )
                 {
                     response = HandleFailureResult<TResult?>(httpMethod, ex, NotFoundStatusCode);
