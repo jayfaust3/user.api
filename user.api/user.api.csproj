@@ -69,6 +69,7 @@
     <None Remove="Common\Models\Configuration\ElasticsSearch\" />
     <None Remove="Common\Models\API\User\" />
     <None Remove="Common\Utilities\" />
+    <None Remove="Common\Exceptions\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Common\Models\Configuration\" />
@@ -100,5 +101,6 @@
     <Folder Include="Common\Models\Configuration\ElasticsSearch\" />
     <Folder Include="Common\Models\API\User\" />
     <Folder Include="Common\Utilities\" />
+    <Folder Include="Common\Exceptions\" />
   </ItemGroup>
 </Project>

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Common.Models.API;
+using Common.Exceptions;
 
 namespace API.Controllers;
 
@@ -17,20 +18,23 @@ public abstract class BaseController : ControllerBase
 
     protected const int NotFoundStatusCode = 404;
 
+    protected const int ConflictStatusCode = 409;
+
     protected const int ServerErrorStatusCode = 500;
 
     private readonly int _serviceCallRetryCount;
 
-    private ILogger _logger;
+    private readonly ILogger _logger;
 
     protected BaseController(ILogger logger)
     {
         _serviceCallRetryCount =
             int.Parse(Environment.GetEnvironmentVariable("SERVICE_CALL_RETRY_COUNT") ?? "1");
+
         _logger = logger;
     }
 
-    protected async Task<ActionResult<APIResponse<TResult?>>?> RunAsyncServiceCall<TResult> 
+    protected async Task<ActionResult<APIResponse<TResult?>>> RunAsyncServiceCall<TResult> 
     (
         Func<Task<TResult?>> call,
         string httpMethod,
@@ -38,7 +42,7 @@ public abstract class BaseController : ControllerBase
     )
         where TResult : class?
     {
-        ActionResult<APIResponse<TResult?>>? response = null;
+        ActionResult<APIResponse<TResult?>> response = null;
 
         for (var currentAttempt = 1; currentAttempt <= _serviceCallRetryCount; currentAttempt++)
         {
@@ -55,6 +59,9 @@ public abstract class BaseController : ControllerBase
                     case PostMethod:
                         response = HandlePostResult(serviceResult);
                         break;
+                    case PutMethod:
+                        response = HandleNonPostResult(serviceResult);
+                        break;
                     default:
                         break;
                 }
@@ -63,11 +70,22 @@ public abstract class BaseController : ControllerBase
             }
             catch(Exception ex)
             {
+                if (ex is NotFoundException )
+                {
+                    response = HandleFailureResult<TResult?>(httpMethod, ex, NotFoundStatusCode);
+                    break;
+                }
+
+                if (ex is ConflictException)
+                {
+                    response = HandleFailureResult<TResult?>(httpMethod, ex, ConflictStatusCode);
+                    break;
+                }
+
                 if (currentAttempt == _serviceCallRetryCount)
                 {
-                    _logger.LogError($"Error occurred on {httpMethod} request: {ex.Message}");
-
-                    response = HandleFailureResult<TResult?>(ex);
+                    response = HandleFailureResult<TResult?>(httpMethod, ex);
+                    break;
                 }
             }
         }
@@ -109,18 +127,22 @@ public abstract class BaseController : ControllerBase
         };
     }
 
-    private static ActionResult<APIResponse<TResult?>> HandleFailureResult<TResult>(Exception exception) where TResult : class?
+    private ActionResult<APIResponse<TResult?>> HandleFailureResult<TResult>(string httpMethod, Exception exception, int statusCode = ServerErrorStatusCode) where TResult : class?
     {
+        var errorMessage = exception.Message;
+
+        _logger.LogError($"Error occurred on {httpMethod} request: '{errorMessage}'");
+
         return new ObjectResult
         (
             new APIResponse<TResult?>
             (
                 null,
-                exception.Message
+                errorMessage
             )
         )
         {
-            StatusCode = ServerErrorStatusCode
+            StatusCode = statusCode
         };
     }
 }

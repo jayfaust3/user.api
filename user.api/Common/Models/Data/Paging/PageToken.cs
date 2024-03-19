@@ -5,7 +5,7 @@ namespace Common.Models.Data;
 public class PageToken
 {
     [JsonPropertyName("term")]
-    public string Term { get; set; }
+    public string? Term { get; set; }
     [JsonPropertyName("cursor")]
     public int Cursor { get; set; }
     [JsonPropertyName("limit")]

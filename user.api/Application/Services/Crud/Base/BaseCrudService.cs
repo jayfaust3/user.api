@@ -1,8 +1,9 @@
-﻿using Application.Services.Cache;
+﻿
 using Common.Models.Data;
 using Common.Models.DTO;
+using Common.Utilities;
 using Persistence.Repositories;
-using Utilities;
+using Application.Services.Cache;
 
 namespace Application.Services.Crud;
 
@@ -21,9 +22,9 @@ public abstract class BaseCrudService<TDTO> : ICrudService<TDTO> where TDTO : cl
         _cacheService = cacheService;
     }
 
-    public async Task<TDTO?> GetByIdAsync(Guid id)
+    public virtual async Task<TDTO?> GetByIdAsync(Guid id)
     {
-        var cacheKey = GetCacheKey(id);
+        var cacheKey = GetSingleEntryCacheKey(id);
 
         TDTO? match = await _cacheService.GetItemAsync<TDTO>(cacheKey);
 
@@ -37,9 +38,11 @@ public abstract class BaseCrudService<TDTO> : ICrudService<TDTO> where TDTO : cl
         return match;
     }
 
-    public async Task<IEnumerable<TDTO>> GetAllAsync(string pageToken)
+    public virtual async Task<IEnumerable<TDTO>> GetAllAsync(string pageToken)
     {
-        var matches = await _cacheService.GetItemAsync<IEnumerable<TDTO>>(pageToken);
+        var pageCacheKey = GetPageCacheKey(pageToken);
+
+        var matches = await _cacheService.GetItemAsync<IEnumerable<TDTO>>(pageCacheKey);
 
         if (matches == null)
         {
@@ -49,13 +52,13 @@ public abstract class BaseCrudService<TDTO> : ICrudService<TDTO> where TDTO : cl
 
             await _cacheService.SetItemAsync(pageToken, matches);
 
-            IEnumerable<Task> cacheSetTasks = new List<Task>();
+            var cacheSetTasks = new List<Task>();
 
             foreach (var match in matches)
             {
-                var cacheKey = GetCacheKey(match.Id.Value);
+                var cacheKey = GetSingleEntryCacheKey(match.Id.Value);
 
-                await _cacheService.SetItemAsync(cacheKey, match);
+                cacheSetTasks.Add(_cacheService.SetItemAsync(cacheKey, match));
             }
 
             await Task.WhenAll(cacheSetTasks);
@@ -64,13 +67,13 @@ public abstract class BaseCrudService<TDTO> : ICrudService<TDTO> where TDTO : cl
         return matches;
     }
 
-    public async Task<TDTO> CreateAsync(TDTO recordToCreate) =>
+    public virtual async Task<TDTO> CreateAsync(TDTO recordToCreate) =>
         await _repository.InsertAsync(recordToCreate);
 
-    public async Task<TDTO> UpdateAsync(TDTO recordToUpdate)
-    {
-        // TODO: finish implementation
-    }
+    public virtual async Task<TDTO> UpdateAsync(TDTO recordToUpdate) =>
+        await _repository.UpdateAsync(recordToUpdate);
 
-    protected abstract string GetCacheKey(Guid id);
+    protected abstract string GetSingleEntryCacheKey(Guid id);
+
+    protected abstract string GetPageCacheKey(string pageToken);
 }

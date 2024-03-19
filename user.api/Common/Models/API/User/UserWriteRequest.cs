@@ -1,6 +1,6 @@
 ﻿namespace Common.Models.API;
 
-public class UserCreateRequest
+public class UserWriteRequest
 {
     public string FirstName { get; set; }
     public string LastName { get; set; }

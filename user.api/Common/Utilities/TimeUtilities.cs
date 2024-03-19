@@ -1,4 +1,4 @@
-﻿namespace Utilities;
+﻿namespace Common.Utilities;
 
 public class TimeUtilities
 {

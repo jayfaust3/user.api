@@ -1,6 +1,7 @@
-﻿using Persistence.Repositories;
-using Common.Models.DTO;
+﻿using Common.Models.DTO;
 using Common.Models.Data;
+using Common.Exceptions;
+using Persistence.Repositories;
 using Application.Services.Cache;
 
 namespace Application.Services.Crud;
@@ -33,5 +34,30 @@ public class UserCrudService : BaseCrudService<UserDTO>, IUserCrudService
         return matches.First();
     }
 
-    protected override string GetCacheKey(Guid recordId) => $"USER:{recordId}";
+    public override async Task<UserDTO> CreateAsync(UserDTO recordToCreate)
+    {
+        await ValidateIncomingRecord(recordToCreate);
+
+        return await base.CreateAsync(recordToCreate);
+    }
+
+    public override async Task<UserDTO> UpdateAsync(UserDTO recordToUpdate)
+    {
+        await ValidateIncomingRecord(recordToUpdate);
+
+        return await base.UpdateAsync(recordToUpdate);
+    }
+
+    protected override string GetSingleEntryCacheKey(Guid recordId) => $"USER_ENTRY:{recordId}";
+
+    protected override string GetPageCacheKey(string pageToken) => $"USER_PAGE:{pageToken}";
+
+    private async Task ValidateIncomingRecord(UserDTO recordToWrite)
+    {
+        var email = recordToWrite.EmailAddress;
+
+        UserDTO? potentialExistingUserWithMatchingEmail = await GetByEmailAsync(email);
+
+        if (potentialExistingUserWithMatchingEmail != null) throw new ConflictException($"User with email: '{email}' already exists");
+    }
 }

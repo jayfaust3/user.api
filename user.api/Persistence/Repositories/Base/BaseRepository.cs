@@ -4,7 +4,8 @@ using Clients.Elasticsearch;
 using Common.Models.Context;
 using Common.Models.Data;
 using Common.Models.DTO;
-using Utilities;
+using Common.Utilities;
+using Common.Exceptions;
 
 namespace Persistence.Repositories;
 
@@ -49,26 +50,34 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO>
     {
         var entityFields = GetAllSearchableFields();
 
-        Fields? fields = null;
+        Query? query = null;
 
-        foreach (var fieldName in entityFields)
+        if (!string.IsNullOrWhiteSpace(pageToken.Term))
         {
-            if ((fields?.Count() ?? 0) == 0)
-                fields = new Field(fieldName);
-            else
-                fields = fields?.And(new Field(fieldName));
+            Fields? fields = null;
 
+            foreach (var fieldName in entityFields)
+            {
+                if ((fields?.Count() ?? 0) == 0)
+                    fields = new Field(fieldName);
+                else
+                    fields = fields?.And(new Field(fieldName));
+
+            }
+
+            query = new MultiMatchQuery
+            {
+                Query = pageToken.Term,
+                Fields = fields
+            };
         }
+
 
         return new SearchRequest<TEntity>
         {
             From = pageToken.Cursor,
             Size = pageToken.Limit,
-            Query = new MultiMatchQuery
-            {
-                Query = pageToken.Term,
-                Fields = fields
-            }
+            Query = query
         };
     }
 
@@ -78,6 +87,13 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO>
 
     public async Task<TDTO?> FindOneAsync(Guid id)
     {
+        TEntity? match = await FindEntityAsync(id);            
+
+        return match != null ? MapToDTO(match) : null;
+    }
+
+    private async Task<TEntity?> FindEntityAsync(Guid id)
+    {
         GetRequest request = GenerateFindOneGetRequest(id);
 
         GetResponse<TEntity> response = await _client.GetAsync<TEntity>(request);
@@ -85,9 +101,7 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO>
         if (!response.IsSuccess())
             throw response.ApiCallDetails.OriginalException;
 
-        TEntity? match = response.Source;            
-
-        return match != null ? MapToDTO(match) : null;
+        return response.Source;
     }
 
     public async Task<IEnumerable<TDTO>> FindAllAsync(PageToken pageToken)
@@ -129,17 +143,33 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO>
 
     public async Task<TDTO> UpdateAsync(TDTO dto)
     {
+        var entityId = dto.Id.Value;
+
+        TEntity? currentStateEntity = await FindEntityAsync(entityId);
+
+        if (currentStateEntity == null) throw new NotFoundException($"No entity with id '{entityId}' found");
+
         TEntity entity = MapToEntity(dto);
 
         var timestamp = TimeUtilities.GetUnixEpoch();
         var userId = _userContext.Id;
 
-        entity.id = Guid.NewGuid();
+        entity.id = entityId;
+        entity.created_by = currentStateEntity.created_by;
+        entity.created_on = currentStateEntity.created_on;
         entity.updated_on = timestamp;
         entity.updated_by = userId;
 
+        var updateRequest = new UpdateRequest<TEntity, TEntity>(_client.IndexName, entity.id)
+        {
+            Doc = entity,
+        };
 
-        // TODO: finish implementation
+        UpdateResponse<TEntity> response = await _client.UpdateAsync(updateRequest);
+
+        if (!response.IsSuccess())
+            throw response.ApiCallDetails.OriginalException;
+
         return MapToDTO(entity);
     }
 }
