@@ -1,10 +1,10 @@
-﻿using Clients.Elasticsearch;
+﻿using Elastic.Clients.Elasticsearch;
+using Elastic.Clients.Elasticsearch.QueryDsl;
+using Clients.Elasticsearch;
 using Common.Models.Context;
 using Common.Models.Data;
 using Common.Models.DTO;
 using Utilities;
-using Elastic.Clients.Elasticsearch;
-using Elastic.Clients.Elasticsearch.QueryDsl;
 
 namespace Persistence.Repositories;
 
@@ -76,29 +76,6 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO>
 
     protected abstract TDTO MapToDTO(TEntity dto);
 
-    public async Task<TDTO> InsertAsync(TDTO dto)
-    {
-        TEntity entity = MapToEntity(dto);
-
-        var timestamp = TimeUtilities.GetUnixEpoch();
-        var userId = _userContext.Id;
-
-        entity.id = Guid.NewGuid();
-        entity.created_on = timestamp;
-        entity.updated_on = timestamp;
-        entity.created_by = userId;
-        entity.updated_by = userId;
-
-        var request = new IndexRequest<TEntity>(entity);
-
-        IndexResponse response = await _client.IndexAsync(request);
-
-        if (!response.IsSuccess())
-            throw response.ApiCallDetails.OriginalException;
-
-        return MapToDTO(entity);
-    }
-
     public async Task<TDTO?> FindOneAsync(Guid id)
     {
         GetRequest request = GenerateFindOneGetRequest(id);
@@ -125,5 +102,28 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO>
         IReadOnlyCollection<TEntity> matches = response.Documents;
 
         return matches.Select(MapToDTO);            
+    }
+
+    public async Task<TDTO> InsertAsync(TDTO dto)
+    {
+        TEntity entity = MapToEntity(dto);
+
+        var timestamp = TimeUtilities.GetUnixEpoch();
+        var userId = _userContext.Id;
+
+        entity.id = Guid.NewGuid();
+        entity.created_on = timestamp;
+        entity.updated_on = timestamp;
+        entity.created_by = userId;
+        entity.updated_by = userId;
+
+        var request = new IndexRequest<TEntity>(entity);
+
+        IndexResponse response = await _client.IndexAsync(request);
+
+        if (!response.IsSuccess())
+            throw response.ApiCallDetails.OriginalException;
+
+        return MapToDTO(entity);
     }
 }

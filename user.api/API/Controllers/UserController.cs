@@ -61,11 +61,7 @@ public class UserController : BaseController
     {
         return await RunAsyncServiceCall
         (
-            async () => {
-                PageToken parsedToken = PagingUtilities.ParsePageToken(pageToken);
-
-                return await _userCrudService.GetAllAsync(parsedToken);
-            },
+            async () => await _userCrudService.GetAllAsync(pageToken),
             GetMethod,
             cancellationToken
         );

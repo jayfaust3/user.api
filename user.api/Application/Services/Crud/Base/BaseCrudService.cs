@@ -2,6 +2,7 @@
 using Common.Models.Data;
 using Common.Models.DTO;
 using Persistence.Repositories;
+using Utilities;
 
 namespace Application.Services.Crud;
 
@@ -10,7 +11,11 @@ public abstract class BaseCrudService<TDTO> : ICrudService<TDTO> where TDTO : cl
     protected readonly IRepository<TDTO> _repository;
     protected readonly ICacheService _cacheService;
 
-    public BaseCrudService(IRepository<TDTO> repository, ICacheService cacheService)
+    public BaseCrudService
+    (
+        IRepository<TDTO> repository,
+        ICacheService cacheService
+    )
     {
         _repository = repository;
         _cacheService = cacheService;
@@ -32,17 +37,35 @@ public abstract class BaseCrudService<TDTO> : ICrudService<TDTO> where TDTO : cl
         return match;
     }
 
-    public async Task<IEnumerable<TDTO>> GetAllAsync(PageToken pageToken)
+    public async Task<IEnumerable<TDTO>> GetAllAsync(string pageToken)
     {
-        return await _repository.FindAllAsync(pageToken);
+        var matches = await _cacheService.GetItemAsync<IEnumerable<TDTO>>(pageToken);
+
+        if (matches == null)
+        {
+            PageToken parsedToken = PagingUtilities.ParsePageToken(pageToken);
+
+            matches = await _repository.FindAllAsync(parsedToken);
+
+            await _cacheService.SetItemAsync(pageToken, matches);
+
+            IEnumerable<Task> cacheSetTasks = new List<Task>();
+
+            foreach (var match in matches)
+            {
+                var cacheKey = GetCacheKey(match.Id.Value);
+
+                await _cacheService.SetItemAsync(cacheKey, match);
+            }
+
+            await Task.WhenAll(cacheSetTasks);
+        }
+
+        return matches;
     }
 
-    public async Task<TDTO> CreateAsync(TDTO recordToCreate)
-    {
-        var createdRecord = await _repository.InsertAsync(recordToCreate);
+    public async Task<TDTO> CreateAsync(TDTO recordToCreate) =>
+        await _repository.InsertAsync(recordToCreate);
 
-        return createdRecord;
-    }
-
-    protected abstract string GetCacheKey(Guid recordId);
+    protected abstract string GetCacheKey(Guid id);
 }
