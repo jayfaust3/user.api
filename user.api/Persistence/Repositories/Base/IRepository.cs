@@ -8,5 +8,6 @@ namespace Persistence.Repositories
         Task<TDTO> InsertAsync(TDTO dto);
         Task<TDTO?> FindOneAsync(Guid id);
         Task<IEnumerable<TDTO>> FindAllAsync(PageToken pageToken);
+        Task<TDTO> UpdateAsync(TDTO dto);
     }
 }

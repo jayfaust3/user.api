@@ -126,4 +126,20 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO>
 
         return MapToDTO(entity);
     }
+
+    public async Task<TDTO> UpdateAsync(TDTO dto)
+    {
+        TEntity entity = MapToEntity(dto);
+
+        var timestamp = TimeUtilities.GetUnixEpoch();
+        var userId = _userContext.Id;
+
+        entity.id = Guid.NewGuid();
+        entity.updated_on = timestamp;
+        entity.updated_by = userId;
+
+
+        // TODO: finish implementation
+        return MapToDTO(entity);
+    }
 }

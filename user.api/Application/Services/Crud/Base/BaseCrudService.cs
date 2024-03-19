@@ -67,5 +67,10 @@ public abstract class BaseCrudService<TDTO> : ICrudService<TDTO> where TDTO : cl
     public async Task<TDTO> CreateAsync(TDTO recordToCreate) =>
         await _repository.InsertAsync(recordToCreate);
 
+    public async Task<TDTO> UpdateAsync(TDTO recordToUpdate)
+    {
+        // TODO: finish implementation
+    }
+
     protected abstract string GetCacheKey(Guid id);
 }
