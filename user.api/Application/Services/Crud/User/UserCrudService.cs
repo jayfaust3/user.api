@@ -12,26 +12,57 @@ public class UserCrudService : BaseCrudService<UserDTO>, IUserCrudService
     public UserCrudService
     (
         IUserRepository userRepository,
-        ICacheService cacheService
+        ICacheService cacheService,
+        ILogger logger
     ) :
     base
     (
         userRepository,
-        cacheService
+        cacheService,
+        logger
     ) {}
 
     public async Task<UserDTO?> GetByEmailAsync(string email)
     {
-        var pageToken = new PageToken
+        UserDTO? match;
+
+        var cacheKey = GetEmailCacheKey(email);
+
+        match = await _cacheService.GetItemAsync<UserDTO>(cacheKey);
+
+        if (match is null)
         {
-            Cursor = 0,
-            Limit = 1,
-            Term = email
-        };
+            _logger.LogInformation($"Cache miss for entry with key: '{cacheKey}'");
 
-        IEnumerable<UserDTO> matches = await _repository.FindAllAsync(pageToken);
+            var pageToken = new PageToken
+            {
+                Cursor = 0,
+                Limit = 1,
+                Term = email
+            };
 
-        return matches.Count() > 0 ? matches.First() : null;
+            IEnumerable<UserDTO> matches = await _repository.FindAllAsync(pageToken);
+
+            if (matches.Count() > 0)
+            {
+                match = matches.First();
+
+                try
+                {
+                    await _cacheService.SetItemAsync(cacheKey, match);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogInformation($"Unable to write entry with key: '{cacheKey}' to cache from single get, error: {ex.Message}");
+                }
+            }
+        }
+        else
+        {
+            _logger.LogInformation($"Cache hit for entry with key: '{cacheKey}'");
+        }
+
+        return match;
     }
 
     public override async Task<UserDTO> CreateAsync(UserDTO recordToCreate)
@@ -60,4 +91,6 @@ public class UserCrudService : BaseCrudService<UserDTO>, IUserCrudService
 
         if (potentialExistingUserWithMatchingEmail != null) throw new ConflictException($"User with email: '{email}' already exists");
     }
+
+    private static string GetEmailCacheKey(string email) => $"USER_ENTRY_EMAIL:{email}";
 }
