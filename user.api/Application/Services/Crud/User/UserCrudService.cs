@@ -31,7 +31,7 @@ public class UserCrudService : BaseCrudService<UserDTO>, IUserCrudService
 
         IEnumerable<UserDTO> matches = await _repository.FindAllAsync(pageToken);
 
-        return matches.First();
+        return matches.Count() > 0 ? matches.First() : null;
     }
 
     public override async Task<UserDTO> CreateAsync(UserDTO recordToCreate)

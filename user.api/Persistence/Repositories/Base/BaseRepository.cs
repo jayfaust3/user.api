@@ -6,6 +6,8 @@ using Common.Models.Data;
 using Common.Models.DTO;
 using Common.Utilities;
 using Common.Exceptions;
+using System.Linq;
+using System.Collections.ObjectModel;
 
 namespace Persistence.Repositories;
 
@@ -48,15 +50,16 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO>
 
     protected virtual SearchRequest<TEntity> GenerateFindAllSearchRequest(PageToken pageToken)
     {
-        var entityFields = GetAllSearchableFields();
-
         Query? query = null;
 
-        if (!string.IsNullOrWhiteSpace(pageToken.Term))
+        var entityFieldNames = GetAllSearchableFields();
+
+        if (!string.IsNullOrWhiteSpace(pageToken.Term) && entityFieldNames != null)
         {
+            
             Fields? fields = null;
 
-            foreach (var fieldName in entityFields)
+            foreach (var fieldName in entityFieldNames)
             {
                 if ((fields?.Count() ?? 0) == 0)
                     fields = new Field(fieldName);
@@ -68,6 +71,7 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO>
             query = new MultiMatchQuery
             {
                 Query = pageToken.Term,
+                Type = TextQueryType.Phrase,
                 Fields = fields
             };
         }
@@ -115,7 +119,7 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO>
 
         IReadOnlyCollection<TEntity> matches = response.Documents;
 
-        return matches.Select(MapToDTO);            
+        return matches.Count > 0 ? matches.Select(MapToDTO) : new List<TDTO>();            
     }
 
     public async Task<TDTO> InsertAsync(TDTO dto)
