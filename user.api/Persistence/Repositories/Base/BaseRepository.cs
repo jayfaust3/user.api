@@ -6,8 +6,6 @@ using Common.Models.Data;
 using Common.Models.DTO;
 using Common.Utilities;
 using Common.Exceptions;
-using System.Linq;
-using System.Collections.ObjectModel;
 
 namespace Persistence.Repositories;
 
@@ -54,7 +52,7 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO>
 
         var entityFieldNames = GetAllSearchableFields();
 
-        if (!string.IsNullOrWhiteSpace(pageToken.Term) && entityFieldNames != null)
+        if (!string.IsNullOrWhiteSpace(pageToken.Term) && (entityFieldNames?.Count() ?? 0) > 0)
         {
             
             Fields? fields = null;
@@ -119,7 +117,7 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO>
 
         IReadOnlyCollection<TEntity> matches = response.Documents;
 
-        return matches.Count > 0 ? matches.Select(MapToDTO) : new List<TDTO>();            
+        return matches.Select(MapToDTO);            
     }
 
     public async Task<TDTO> InsertAsync(TDTO dto)
