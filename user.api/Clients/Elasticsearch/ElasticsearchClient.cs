@@ -32,6 +32,11 @@ public class ElasticsearchClient : IElasticsearchClient
         return await _client.IndexAsync(request);
     }
 
+    public async Task<UpdateResponse<TEntity>> UpdateAsync<TEntity>(UpdateRequest<TEntity, TEntity> request) where TEntity : class, IEntity
+    {
+        return await _client.UpdateAsync(request);
+    }
+
     private static ElasticsearchPackageClient GenerateClient(IElasticsSearchSettings settings)
     {
         var nodeURIs = settings.NodeURIs.Select(uri => new Uri(uri));
