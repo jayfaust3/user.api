@@ -20,31 +20,39 @@ public class UserController : BaseController
     }
 
     [HttpPost]
-    public async Task<ActionResult<APIResponse<UserDTO>>> Post([FromBody] UserDTO payload, CancellationToken cancellationToken)
+    public async Task<ActionResult<APIResponse<UserDTO?>>?> Post([FromBody] UserCreateRequest payload, CancellationToken cancellationToken)
     {
         return await RunAsyncServiceCall
         (
-            async () => await _userCrudService.CreateAsync(payload),
-            cancellationToken,
-            PostMethod
+            async () => await _userCrudService.CreateAsync
+            (
+                new UserDTO
+                {
+                    FirstName = payload.FirstName,
+                    LastName = payload.LastName,
+                    EmailAddress = payload.EmailAddress
+                }
+            ),
+            PostMethod,
+            cancellationToken
         );
 
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<APIResponse<UserDTO?>>> Get(Guid id, CancellationToken cancellationToken)
+    public async Task<ActionResult<APIResponse<UserDTO?>>?> Get(Guid id, CancellationToken cancellationToken)
     {
         return await RunAsyncServiceCall
         (
             async () => await _userCrudService.GetByIdAsync(id),
-            cancellationToken,
-            GetMethod
+            GetMethod,
+            cancellationToken
         );
 
     }
 
     [HttpGet]
-    public async Task<ActionResult<APIResponse<IEnumerable<UserDTO>>>> GetAll([Required][FromQuery] string pageToken, CancellationToken cancellationToken)
+    public async Task<ActionResult<APIResponse<IEnumerable<UserDTO>?>>?> GetAll([Required][FromQuery] string pageToken, CancellationToken cancellationToken)
     {
         return await RunAsyncServiceCall
         (
@@ -53,8 +61,8 @@ public class UserController : BaseController
 
                 return await _userCrudService.GetAllAsync(parsedToken);
             },
-            cancellationToken,
-            GetMethod
+            GetMethod,
+            cancellationToken
         );
 
     }

@@ -22,26 +22,26 @@ public abstract class BaseController : ControllerBase
     private readonly int _serviceCallRetryCount =
         int.Parse(Environment.GetEnvironmentVariable("SERVICE_CALL_RETRY_COUNT") ?? "1");
 
-    protected async Task<ActionResult<APIResponse<TResult>>> RunAsyncServiceCall<TResult> 
+    protected async Task<ActionResult<APIResponse<TResult?>>?> RunAsyncServiceCall<TResult> 
     (
-        Func<Task<TResult>> call,
-        CancellationToken token,
-        string httpMethod
+        Func<Task<TResult?>> call,
+        string httpMethod,
+        CancellationToken token
     )
-        where TResult : class
+        where TResult : class?
     {
-        ActionResult<APIResponse<TResult>> response = null;
+        ActionResult<APIResponse<TResult?>>? response = null;
 
         for (var currentAttempt = 1; currentAttempt <= _serviceCallRetryCount; currentAttempt++)
         {
             try
             {
-                TResult serviceResult = await Task.Run(call, token);
+                TResult? serviceResult = await Task.Run(call, token);
 
                 switch (httpMethod)
                 {
                     case GetMethod:
-                        if (serviceResult == null) response = HandleNullResult<TResult>();
+                        if (serviceResult == null) response = HandleNullResult<TResult?>();
                         else response = HandleNonPostResult(serviceResult);
                         break;
                     case PostMethod:
@@ -56,37 +56,37 @@ public abstract class BaseController : ControllerBase
             catch(Exception ex)
             {
                 if (currentAttempt == _serviceCallRetryCount)
-                    response = HandleFailureResult<TResult>(ex);
+                    response = HandleFailureResult<TResult?>(ex);
             }
         }
 
         return response;
     }
 
-    private static ActionResult<APIResponse<TResult>> HandlePostResult<TResult>(TResult serviceResult) where TResult : class
+    private static ActionResult<APIResponse<TResult?>> HandlePostResult<TResult>(TResult serviceResult) where TResult : class?
     {
         return new ObjectResult
         (
-            new APIResponse<TResult>(serviceResult)
+            new APIResponse<TResult?>(serviceResult)
         )
         {
             StatusCode = CreatedStatusCode
         };
     }
 
-    private ActionResult<APIResponse<TResult>> HandleNonPostResult<TResult>(TResult serviceResult) where TResult : class
+    private ActionResult<APIResponse<TResult?>> HandleNonPostResult<TResult>(TResult serviceResult) where TResult : class?
     {
         return Ok
         (
-            new APIResponse<TResult>(serviceResult)
+            new APIResponse<TResult?>(serviceResult)
         );
     }
 
-    private static ActionResult<APIResponse<TResult>> HandleNullResult<TResult>() where TResult : class
+    private static ActionResult<APIResponse<TResult?>> HandleNullResult<TResult>() where TResult : class?
     {
         return new ObjectResult
         (
-            new APIResponse<TResult>
+            new APIResponse<TResult?>
             (
                 null,
                 "Entity not found"
@@ -97,11 +97,11 @@ public abstract class BaseController : ControllerBase
         };
     }
 
-    private static ActionResult<APIResponse<TResult>> HandleFailureResult<TResult>(Exception exception) where TResult : class
+    private static ActionResult<APIResponse<TResult?>> HandleFailureResult<TResult>(Exception exception) where TResult : class?
     {
         return new ObjectResult
         (
-            new APIResponse<TResult>
+            new APIResponse<TResult?>
             (
                 null,
                 exception.Message
@@ -112,4 +112,3 @@ public abstract class BaseController : ControllerBase
         };
     }
 }
-

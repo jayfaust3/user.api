@@ -44,7 +44,6 @@
     <None Remove="Common\Models\Data\Base\" />
     <None Remove="Common\Models\Data\User\" />
     <None Remove="Common\Models\Data\Paging\" />
-    <None Remove="Persistence\Utilities\" />
     <None Remove="Elasticsearch.Net" />
     <None Remove="Elastic.Clients.Elasticsearch" />
     <None Remove="MassTransit.Extensions.DependencyInjection" />
@@ -68,6 +67,8 @@
     <None Remove="Clients\" />
     <None Remove="Clients\Elasticsearch\" />
     <None Remove="Common\Models\Configuration\ElasticsSearch\" />
+    <None Remove="Common\Models\API\User\" />
+    <None Remove="Common\Utilities\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Common\Models\Configuration\" />
@@ -81,7 +82,6 @@
     <Folder Include="Common\Models\Data\Base\" />
     <Folder Include="Common\Models\Data\User\" />
     <Folder Include="Common\Models\Data\Paging\" />
-    <Folder Include="Persistence\Utilities\" />
     <Folder Include="API\Consumers\" />
     <Folder Include="Messaging\" />
     <Folder Include="Messaging\Bus\" />
@@ -98,5 +98,7 @@
     <Folder Include="Clients\" />
     <Folder Include="Clients\Elasticsearch\" />
     <Folder Include="Common\Models\Configuration\ElasticsSearch\" />
+    <Folder Include="Common\Models\API\User\" />
+    <Folder Include="Common\Utilities\" />
   </ItemGroup>
 </Project>

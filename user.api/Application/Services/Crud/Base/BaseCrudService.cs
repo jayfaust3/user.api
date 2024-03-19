@@ -41,10 +41,6 @@ public abstract class BaseCrudService<TDTO> : ICrudService<TDTO> where TDTO : cl
     {
         var createdRecord = await _repository.InsertAsync(recordToCreate);
 
-        var cacheKey = GetCacheKey(createdRecord.Id.Value);
-
-        await _cacheService.SetItemAsync(cacheKey, createdRecord);
-
         return createdRecord;
     }
 

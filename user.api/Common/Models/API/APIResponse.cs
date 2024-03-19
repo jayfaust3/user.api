@@ -1,6 +1,6 @@
 namespace Common.Models.API;
 
-public class APIResponse<TData> where TData : class
+public class APIResponse<TData> where TData : class?
 {
     public APIResponse(TData? data = null, string? message = null)
     {

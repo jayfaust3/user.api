@@ -11,14 +11,16 @@ public class GetUserByEmailConsumer : BaseConsumer<GetUserByEmailRequest, UserDT
 {
     private readonly IUserCrudService _userCrudService;
 
-    public GetUserByEmailConsumer(IConnectionFactory connectionFactory, IUserCrudService userCrudService) : base(connectionFactory)
+    public GetUserByEmailConsumer
+    (
+        IConnectionFactory connectionFactory,
+        IUserCrudService userCrudService
+    ) :
+    base(connectionFactory)
 	{
         _userCrudService = userCrudService;
     }
 
-    protected override async Task<UserDTO?> GetResponseAsync(ConsumeContext<IMessage<GetUserByEmailRequest>> context)
-    {
-        return await _userCrudService.GetByEmailAsync(context.Message.Data.Email);
-    }
+    protected override async Task<UserDTO?> GetResponseAsync(ConsumeContext<IMessage<GetUserByEmailRequest>> context) =>
+        await _userCrudService.GetByEmailAsync(context.Message.Data.Email);
 }
-
