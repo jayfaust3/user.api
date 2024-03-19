@@ -33,8 +33,5 @@ public class UserCrudService : BaseCrudService<UserDTO>, IUserCrudService
         return matches.First();
     }
 
-    protected override string GetCacheKey(Guid recordId)
-    {
-        return $"USER:{recordId}";
-    }
+    protected override string GetCacheKey(Guid recordId) => $"USER:{recordId}";
 }
