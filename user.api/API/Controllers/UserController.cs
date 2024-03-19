@@ -14,7 +14,12 @@ public class UserController : BaseController
 {
     private readonly IUserCrudService _userCrudService;
 
-    public UserController(IUserCrudService userCrudService)
+    public UserController
+    (
+        ILogger logger,
+        IUserCrudService userCrudService
+    ) :
+    base(logger)
     {
         _userCrudService = userCrudService;
     }

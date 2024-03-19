@@ -13,14 +13,22 @@ public abstract class BaseController : ControllerBase
 
     protected const string PatchMethod = "PATCH";
 
-    private const int CreatedStatusCode = 201;
+    protected const int CreatedStatusCode = 201;
 
-    private const int NotFoundStatusCode = 404;
+    protected const int NotFoundStatusCode = 404;
 
-    private const int ServerErrorStatusCode = 500;
+    protected const int ServerErrorStatusCode = 500;
 
-    private readonly int _serviceCallRetryCount =
-        int.Parse(Environment.GetEnvironmentVariable("SERVICE_CALL_RETRY_COUNT") ?? "1");
+    private readonly int _serviceCallRetryCount;
+
+    private ILogger _logger;
+
+    protected BaseController(ILogger logger)
+    {
+        _serviceCallRetryCount =
+            int.Parse(Environment.GetEnvironmentVariable("SERVICE_CALL_RETRY_COUNT") ?? "1");
+        _logger = logger;
+    }
 
     protected async Task<ActionResult<APIResponse<TResult?>>?> RunAsyncServiceCall<TResult> 
     (
@@ -56,7 +64,11 @@ public abstract class BaseController : ControllerBase
             catch(Exception ex)
             {
                 if (currentAttempt == _serviceCallRetryCount)
+                {
+                    _logger.LogError($"Error occurred on {httpMethod} request: {ex.Message}");
+
                     response = HandleFailureResult<TResult?>(ex);
+                }
             }
         }
 

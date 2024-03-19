@@ -15,6 +15,18 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddScoped<IUserContext, UserContext>();
 
+//logging
+var loggerFactory = LoggerFactory.Create(builder =>
+{
+    // Add a console logger
+    builder.AddConsole();
+});
+
+var logger = loggerFactory.CreateLogger<Program>();
+
+builder.Services.AddTransient<ILogger>(_ => logger);
+//logging
+
 //db
 var openSearchNodeURIs = Environment.GetEnvironmentVariable("OPENSEARCH_NODE_URIS")?
     .Split(';') ??
