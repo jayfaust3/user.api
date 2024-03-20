@@ -42,7 +42,7 @@ public class ElasticsearchClient : IElasticsearchClient
         return await _client.DeleteAsync(request);
     }
 
-    private static ElasticsearchPackageClient GenerateClient(IElasticsSearchSettings settings)
+    private ElasticsearchPackageClient GenerateClient(IElasticsSearchSettings settings)
     {
         var nodeURIs = settings.NodeURIs.Select(uri => new Uri(uri));
 
@@ -53,10 +53,10 @@ public class ElasticsearchClient : IElasticsearchClient
             (
                 m =>
                 {
-                    m.IndexName(settings.IndexName);
+                    m.IndexName(IndexName);
                     m = m.IdProperty("id");
                 }
-            ).DefaultIndex(settings.IndexName);
+            ).DefaultIndex(IndexName);
 
         return new ElasticsearchPackageClient(connectionSettings);
     }
