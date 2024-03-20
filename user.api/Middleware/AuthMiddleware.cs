@@ -28,7 +28,7 @@ public class AuthMiddleware
                 return;
             }
 
-            var token = await ExtractTokenFromAuthorizationHeaderValue(authorizationHeaderValue);
+            var token = ExtractTokenFromAuthorizationHeaderValue(authorizationHeaderValue.ToString());
 
             bool tokenIsValid = token is not null ? await ValidateAuthTokenAndSetContext(httpContext, token, userContext) : false;
 
@@ -42,7 +42,7 @@ public class AuthMiddleware
         await _next.Invoke(httpContext);
     }
 
-    private async Task<JwtSecurityToken?> ExtractTokenFromAuthorizationHeaderValue(string authorizationHeaderValue)
+    private JwtSecurityToken? ExtractTokenFromAuthorizationHeaderValue(string authorizationHeaderValue)
     {
         JwtSecurityToken? token = null;
 
