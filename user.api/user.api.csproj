@@ -21,9 +21,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Remove="Properties\launchSettings.json" />
-  </ItemGroup>
-  <ItemGroup>
     <None Remove="Swashbuckle.AspNetCore.Swagger" />
     <None Remove="Swashbuckle.AspNetCore.SwaggerGen" />
     <None Remove="MongoDB.Driver" />
@@ -102,5 +99,10 @@
     <Folder Include="Common\Models\API\User\" />
     <Folder Include="Common\Utilities\" />
     <Folder Include="Common\Exceptions\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Update="Properties\launchSettings.json">
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+    </Content>
   </ItemGroup>
 </Project>
