@@ -81,8 +81,6 @@ public class UserCrudService : BaseCrudService<UserDTO>, IUserCrudService
 
     protected override string GetSingleEntryCacheKey(Guid recordId) => $"USER_ENTRY:{recordId}";
 
-    protected override string GetPageCacheKey(string pageToken) => $"USER_PAGE:{pageToken}";
-
     private async Task ValidateIncomingRecord(UserDTO recordToWrite)
     {
         var email = recordToWrite.EmailAddress;

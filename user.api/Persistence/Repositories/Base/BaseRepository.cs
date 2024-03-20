@@ -94,18 +94,6 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO>
         return match != null ? MapToDTO(match) : null;
     }
 
-    private async Task<TEntity?> FindEntityAsync(Guid id)
-    {
-        GetRequest request = GenerateFindOneGetRequest(id);
-
-        GetResponse<TEntity> response = await _client.GetAsync<TEntity>(request);
-
-        if (!response.IsSuccess())
-            throw response.ApiCallDetails.OriginalException;
-
-        return response.Source;
-    }
-
     public async Task<IEnumerable<TDTO>> FindAllAsync(PageToken pageToken)
     {
         SearchRequest<TEntity> request = GenerateFindAllSearchRequest(pageToken);
@@ -173,5 +161,27 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO>
             throw response.ApiCallDetails.OriginalException;
 
         return MapToDTO(entity);
+    }
+
+    public async Task DeleteAsync(Guid id)
+    {
+        var request = new DeleteRequest(_client.IndexName, id);
+
+        DeleteResponse response = await _client.DeleteAsync(request);
+
+        if (!response.IsSuccess())
+            throw response.ApiCallDetails.OriginalException;
+    }
+
+    private async Task<TEntity?> FindEntityAsync(Guid id)
+    {
+        GetRequest request = GenerateFindOneGetRequest(id);
+
+        GetResponse<TEntity> response = await _client.GetAsync<TEntity>(request);
+
+        if (!response.IsSuccess())
+            throw response.ApiCallDetails.OriginalException;
+
+        return response.Source;
     }
 }

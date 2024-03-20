@@ -60,63 +60,41 @@ public abstract class BaseCrudService<TDTO> : ICrudService<TDTO> where TDTO : cl
 
     public virtual async Task<IEnumerable<TDTO>> GetAllAsync(string pageToken)
     {
-        var pageCacheKey = GetPageCacheKey(pageToken);
+        PageToken parsedToken;
 
-        var matches = await _cacheService.GetItemAsync<IEnumerable<TDTO>>(pageCacheKey);
-
-        if (matches == null)
+        try
         {
-            _logger.LogInformation($"Cache miss for page with key: '{pageCacheKey}'");
+            parsedToken = PagingUtilities.ParsePageToken(pageToken);
+        }
+        catch (Exception ex)
+        {
+            throw new BadRequestException($"Unable to parse page token, error: '{ex.Message}'");
+        }
 
-            PageToken parsedToken = null;
+        IEnumerable<TDTO> matches = await _repository.FindAllAsync(parsedToken);
 
-            try
+        var cacheSetTasks = new List<Task>();
+
+        foreach (var match in matches)
+        {
+            var cacheKey = GetSingleEntryCacheKey(match.Id.Value);
+
+            var operation = async () =>
             {
-                parsedToken = PagingUtilities.ParsePageToken(pageToken);
-            }
-            catch (Exception ex)
-            {
-                throw new BadRequestException($"Unable to parse page token, error: '{ex.Message}'");
-            }
-            
-            matches = await _repository.FindAllAsync(parsedToken);
-
-            try
-            {
-                await _cacheService.SetItemAsync(pageToken, matches);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogInformation($"Unable to write page with key: '{pageCacheKey}' to cache, error: {ex.Message}");
-            }
-
-            var cacheSetTasks = new List<Task>();
-
-            foreach (var match in matches)
-            {
-                var cacheKey = GetSingleEntryCacheKey(match.Id.Value);
-
-                var operation = async () =>
+                try
                 {
-                    try
-                    {
-                        await _cacheService.SetItemAsync(cacheKey, match);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogInformation($"Unable to write entry with key: '{cacheKey}' to cache from batch get, error: {ex.Message}");
-                    }
-                };
+                    await _cacheService.SetItemAsync(cacheKey, match);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogInformation($"Unable to write entry with key: '{cacheKey}' to cache from batch get, error: {ex.Message}");
+                }
+            };
 
-                cacheSetTasks.Add(operation());
-            }
+            cacheSetTasks.Add(operation());
+        }
 
-            await Task.WhenAll(cacheSetTasks);
-        }
-        else
-        {
-            _logger.LogInformation($"Cache hit for page with key: '{pageCacheKey}'");
-        }
+        await Task.WhenAll(cacheSetTasks);
 
         return matches;
     }
@@ -136,13 +114,31 @@ public abstract class BaseCrudService<TDTO> : ICrudService<TDTO> where TDTO : cl
         }
         catch(Exception ex)
         {
-            _logger.LogError($"Unable to remove entry with key '{cacheKey}' from cache, error: '{ex.Message}'");
+            _logger.LogError($"Unable to remove entry with key '{cacheKey}' from cache on update, error: '{ex.Message}'");
         }
 
         return await _repository.UpdateAsync(recordToUpdate);
     }
 
-    protected abstract string GetSingleEntryCacheKey(Guid id);
+    public virtual async Task DeleteByIdAsync(Guid id)
+    {
+        TDTO? match = await GetByIdAsync(id);
 
-    protected abstract string GetPageCacheKey(string pageToken);
+        if (match is null) throw new NotFoundException($"Unable to delete entry, no entry found with id '{id}'");
+
+        await _repository.DeleteAsync(id);
+
+        var cacheKey = GetSingleEntryCacheKey(id);
+
+        try
+        {
+            await _cacheService.RemoveItemAsync<TDTO>(cacheKey);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Unable to remove entry with key '{cacheKey}' from cache on delete, error: '{ex.Message}'");
+        }
+    }
+
+    protected abstract string GetSingleEntryCacheKey(Guid id);
 }

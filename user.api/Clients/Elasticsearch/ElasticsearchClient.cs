@@ -37,6 +37,11 @@ public class ElasticsearchClient : IElasticsearchClient
         return await _client.UpdateAsync(request);
     }
 
+    public async Task<DeleteResponse> DeleteAsync(DeleteRequest request)
+    {
+        return await _client.DeleteAsync(request);
+    }
+
     private static ElasticsearchPackageClient GenerateClient(IElasticsSearchSettings settings)
     {
         var nodeURIs = settings.NodeURIs.Select(uri => new Uri(uri));

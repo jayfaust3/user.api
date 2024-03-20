@@ -10,4 +10,5 @@ public interface IElasticsearchClient
     Task<SearchResponse<TEntity>> SearchAsync<TEntity>(SearchRequest<TEntity> request) where TEntity : class, IEntity;
     Task<IndexResponse> IndexAsync<TEntity>(IndexRequest<TEntity> request) where TEntity : class, IEntity;
     Task<UpdateResponse<TEntity>> UpdateAsync<TEntity>(UpdateRequest<TEntity, TEntity> request) where TEntity : class, IEntity;
+    Task<DeleteResponse> DeleteAsync(DeleteRequest request);
 }

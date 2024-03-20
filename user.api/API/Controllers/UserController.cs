@@ -23,7 +23,7 @@ public class UserController : BaseController
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<APIResponse<UserDTO?>>> Get(Guid id, CancellationToken cancellationToken)
+    public async Task<IActionResult> Get(Guid id, CancellationToken cancellationToken)
     {
         return await RunAsyncServiceCall
         (
@@ -35,7 +35,7 @@ public class UserController : BaseController
     }
 
     [HttpGet]
-    public async Task<ActionResult<APIResponse<IEnumerable<UserDTO>?>>> GetAll([FromQuery] string? pageToken, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetAll([FromQuery] string? pageToken, CancellationToken cancellationToken)
     {
         return await RunAsyncServiceCall
         (
@@ -47,7 +47,7 @@ public class UserController : BaseController
     }
 
     [HttpPost]
-    public async Task<ActionResult<APIResponse<UserDTO?>>> Post([FromBody] UserWriteRequest payload, CancellationToken cancellationToken)
+    public async Task<IActionResult> Post([FromBody] UserWriteRequest payload, CancellationToken cancellationToken)
     {
         return await RunAsyncServiceCall
         (
@@ -66,7 +66,7 @@ public class UserController : BaseController
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult<APIResponse<UserDTO?>>> Post(Guid id, [FromBody] UserWriteRequest payload, CancellationToken cancellationToken)
+    public async Task<IActionResult> Post(Guid id, [FromBody] UserWriteRequest payload, CancellationToken cancellationToken)
     {
         return await RunAsyncServiceCall
         (
@@ -81,6 +81,20 @@ public class UserController : BaseController
                 }
             ),
             PutMethod,
+            cancellationToken
+        );
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
+    {
+        return await RunAsyncServiceCall<object>
+        (
+            async () => {
+                await _userCrudService.DeleteByIdAsync(id);
+                return null;
+            },
+            DeleteMethod,
             cancellationToken
         );
     }

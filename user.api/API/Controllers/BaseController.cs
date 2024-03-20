@@ -14,6 +14,8 @@ public abstract class BaseController : ControllerBase
 
     protected const string PatchMethod = "PATCH";
 
+    protected const string DeleteMethod = "DELETE";
+
     protected const int CreatedStatusCode = 201;
 
     protected const int BadRequestStatusCode = 400;
@@ -36,7 +38,7 @@ public abstract class BaseController : ControllerBase
         _logger = logger;
     }
 
-    protected async Task<ActionResult<APIResponse<TResult?>>> RunAsyncServiceCall<TResult> 
+    protected async Task<IActionResult> RunAsyncServiceCall<TResult> 
     (
         Func<Task<TResult?>> call,
         string httpMethod,
@@ -44,7 +46,7 @@ public abstract class BaseController : ControllerBase
     )
         where TResult : class?
     {
-        ActionResult<APIResponse<TResult?>> response = null;
+        IActionResult response = null;
 
         for (var currentAttempt = 1; currentAttempt <= _serviceCallRetryCount; currentAttempt++)
         {
@@ -63,6 +65,9 @@ public abstract class BaseController : ControllerBase
                         break;
                     case PutMethod:
                         response = HandleNonPostResult(serviceResult);
+                        break;
+                    case DeleteMethod:
+                        response = HandleNoContentResult();
                         break;
                     default:
                         break;
@@ -101,7 +106,7 @@ public abstract class BaseController : ControllerBase
         return response;
     }
 
-    private static ActionResult<APIResponse<TResult?>> HandlePostResult<TResult>(TResult serviceResult) where TResult : class?
+    private static IActionResult HandlePostResult<TResult>(TResult serviceResult) where TResult : class?
     {
         return new ObjectResult
         (
@@ -112,7 +117,7 @@ public abstract class BaseController : ControllerBase
         };
     }
 
-    private ActionResult<APIResponse<TResult?>> HandleNonPostResult<TResult>(TResult serviceResult) where TResult : class?
+    private IActionResult HandleNonPostResult<TResult>(TResult serviceResult) where TResult : class?
     {
         return Ok
         (
@@ -120,7 +125,7 @@ public abstract class BaseController : ControllerBase
         );
     }
 
-    private static ActionResult<APIResponse<TResult?>> HandleNullResult<TResult>() where TResult : class?
+    private static IActionResult HandleNullResult<TResult>() where TResult : class?
     {
         return new ObjectResult
         (
@@ -135,7 +140,12 @@ public abstract class BaseController : ControllerBase
         };
     }
 
-    private ActionResult<APIResponse<TResult?>> HandleFailureResult<TResult>(string httpMethod, Exception exception, int statusCode = ServerErrorStatusCode) where TResult : class?
+    private static IActionResult HandleNoContentResult()
+    {
+        return new NoContentResult();
+    }
+
+    private IActionResult HandleFailureResult<TResult>(string httpMethod, Exception exception, int statusCode = ServerErrorStatusCode) where TResult : class?
     {
         var errorMessage = exception.Message;
 

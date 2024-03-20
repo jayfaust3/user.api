@@ -8,5 +8,6 @@ namespace Application.Services.Crud
         Task<TDTO> UpdateAsync(TDTO recordToUpdate);
         Task<IEnumerable<TDTO>> GetAllAsync(string pageToken);
         Task<TDTO?> GetByIdAsync(Guid id);
+        Task DeleteByIdAsync(Guid id);
     }
 }
