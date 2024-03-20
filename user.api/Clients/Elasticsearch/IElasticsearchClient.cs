@@ -1,9 +1,9 @@
 ﻿using Common.Models.Data;
 using Elastic.Clients.Elasticsearch;
 
-namespace Clients.Elasticsearch;
+namespace Clients.ElasticSearch;
 
-public interface IElasticsearchClient
+public interface IElasticSearchClient
 {
     string IndexName { get; }
     Task<GetResponse<TEntity>> GetAsync<TEntity>(GetRequest request) where TEntity : class, IEntity;

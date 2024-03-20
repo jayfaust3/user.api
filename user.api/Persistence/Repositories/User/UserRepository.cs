@@ -1,7 +1,7 @@
-﻿using Clients.Elasticsearch;
-using Common.Models.Context;
+﻿using Common.Models.Context;
 using Common.Models.Data;
 using Common.Models.DTO;
+using Clients.ElasticSearch;
 
 namespace Persistence.Repositories;
 
@@ -9,7 +9,7 @@ public class UserRepository : BaseRepository<UserEntity, UserDTO>, IUserReposito
 {
 	public UserRepository
     (
-        IElasticsearchClient client,
+        IElasticSearchClient client,
         IUserContext userContext
     ) : base
     (

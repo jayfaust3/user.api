@@ -1,6 +1,6 @@
 ﻿using Elastic.Clients.Elasticsearch;
 using Elastic.Clients.Elasticsearch.QueryDsl;
-using Clients.Elasticsearch;
+using Clients.ElasticSearch;
 using Common.Models.Context;
 using Common.Models.Data;
 using Common.Models.DTO;
@@ -13,7 +13,7 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO>
     where TEntity : class, IEntity
     where TDTO : class, IDTO
 {
-    private readonly IElasticsearchClient _client;
+    private readonly IElasticSearchClient _client;
 
     private readonly IUserContext _userContext;
 
@@ -25,7 +25,7 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO>
 
     protected BaseRepository
     (
-        IElasticsearchClient client,
+        IElasticSearchClient client,
         IUserContext userContext,
         IEnumerable<string>? fieldsExcludedFromSearch = null
     )

@@ -1,14 +1,15 @@
-﻿using Messaging.Bus;
+﻿using System.Reflection;
+using Messaging.Bus;
 using Messaging.Service;
 using MassTransit;
-using Persistence.Repositories;
 using RabbitMQ.Client;
 using Common.Models.Configuration;
-using System.Reflection;
-using Clients.Elasticsearch;
+using Common.Models.Context;
+using Clients.ElasticSearch;
+using Persistence.Repositories;
 using Application.Services.Crud;
 using Application.Services.Cache;
-using Common.Models.Context;
+
 using Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -46,7 +47,7 @@ builder.Services.AddSingleton<IElasticsSearchSettings>
         opensearchUserIndexName
     )
 );
-builder.Services.AddTransient<IElasticsearchClient, ElasticsearchClient>();
+builder.Services.AddTransient<IElasticSearchClient, ElasticSearchClient>();
 builder.Services.AddTransient<IUserRepository, UserRepository>();
 //db
 
