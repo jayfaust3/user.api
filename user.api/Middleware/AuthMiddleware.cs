@@ -20,8 +20,7 @@ public class AuthMiddleware
     {
         if (!bool.Parse(Environment.GetEnvironmentVariable("DISABLE_AUTH") ?? "false"))
         {
-            var authorizationHeaderValue =
-            httpContext.Request.Headers["Authorization"];
+            var authorizationHeaderValue = httpContext.Request.Headers["Authorization"];
 
             if (StringValues.IsNullOrEmpty(authorizationHeaderValue))
             {
