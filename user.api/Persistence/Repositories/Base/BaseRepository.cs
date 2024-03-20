@@ -54,7 +54,6 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO>
 
         if (!string.IsNullOrWhiteSpace(pageToken.Term) && (entityFieldNames?.Count() ?? 0) > 0)
         {
-            
             Fields? fields = null;
 
             foreach (var fieldName in entityFieldNames)
@@ -91,7 +90,7 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO>
     {
         TEntity? match = await FindEntityAsync(id);            
 
-        return match != null ? MapToDTO(match) : null;
+        return match is not null ? MapToDTO(match) : null;
     }
 
     public async Task<IEnumerable<TDTO>> FindAllAsync(PageToken pageToken)
@@ -137,7 +136,7 @@ public abstract class BaseRepository<TEntity, TDTO> : IRepository<TDTO>
 
         TEntity? currentStateEntity = await FindEntityAsync(entityId);
 
-        if (currentStateEntity == null) throw new NotFoundException($"No entity with id '{entityId}' found");
+        if (currentStateEntity is null) throw new NotFoundException($"No entity with id '{entityId}' found");
 
         TEntity entity = MapToEntity(dto);
 

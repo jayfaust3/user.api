@@ -87,7 +87,7 @@ public class UserCrudService : BaseCrudService<UserDTO>, IUserCrudService
 
         UserDTO? potentialExistingUserWithMatchingEmail = await GetByEmailAsync(email);
 
-        if (potentialExistingUserWithMatchingEmail != null) throw new ConflictException($"User with email: '{email}' already exists");
+        if (potentialExistingUserWithMatchingEmail is not null) throw new ConflictException($"User with email: '{email}' already exists");
     }
 
     private static string GetEmailCacheKey(string email) => $"USER_ENTRY_EMAIL:{email}";

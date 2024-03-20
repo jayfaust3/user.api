@@ -2,8 +2,8 @@
 using System.Net;
 using System.IdentityModel.Tokens.Jwt;
 using Common.Models.Context;
-using Application.Services.Crud;
 using Common.Models.DTO;
+using Application.Services.Crud;
 
 namespace Middleware;
 
@@ -29,9 +29,9 @@ public class AuthMiddleware
                 return;
             }
 
-            var token = await ExtractTokenFromAuthorizationHeaderValue(authorizationHeaderValue, httpContext);
+            var token = await ExtractTokenFromAuthorizationHeaderValue(authorizationHeaderValue);
 
-            bool tokenIsValid = token != null ? await ValidateAuthTokenAndSetContext(httpContext, token, userContext) : false;
+            bool tokenIsValid = token is not null ? await ValidateAuthTokenAndSetContext(httpContext, token, userContext) : false;
 
             if (!tokenIsValid)
             {
@@ -43,7 +43,7 @@ public class AuthMiddleware
         await _next.Invoke(httpContext);
     }
 
-    private async Task<JwtSecurityToken?> ExtractTokenFromAuthorizationHeaderValue(string authorizationHeaderValue, HttpContext httpContext)
+    private async Task<JwtSecurityToken?> ExtractTokenFromAuthorizationHeaderValue(string authorizationHeaderValue)
     {
         JwtSecurityToken? token = null;
 
@@ -70,13 +70,13 @@ public class AuthMiddleware
         {
             var userService = httpContext.RequestServices.GetService<IUserCrudService>();
 
-            if (userService != null)
+            if (userService is not null)
             {
                 UserDTO? user = await userService.GetByEmailAsync(emailClaimValue);
 
-                if (user != null)
+                if (user is not null)
                 {
-                    userContext.Id = user?.Id;
+                    userContext.Id = user.Id;
                 }
             }            
         }

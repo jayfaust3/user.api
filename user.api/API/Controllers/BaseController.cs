@@ -57,7 +57,7 @@ public abstract class BaseController : ControllerBase
                 switch (httpMethod)
                 {
                     case GetMethod:
-                        if (serviceResult == null) response = HandleNullResult<TResult?>();
+                        if (serviceResult is null) response = HandleNullResult<TResult?>();
                         else response = HandleNonPostResult(serviceResult);
                         break;
                     case PostMethod:

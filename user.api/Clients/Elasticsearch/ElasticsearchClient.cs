@@ -1,14 +1,15 @@
-﻿using Common.Models.Configuration;
-using Common.Models.Data;
-using Elastic.Clients.Elasticsearch;
+﻿using Elastic.Clients.Elasticsearch;
 using Elastic.Transport;
 using ElasticsearchPackageClient = Elastic.Clients.Elasticsearch.ElasticsearchClient;
+using Common.Models.Configuration;
+using Common.Models.Data;
 
 namespace Clients.Elasticsearch;
 
 public class ElasticsearchClient : IElasticsearchClient
 {
     public string IndexName { get; }
+
     private readonly ElasticsearchPackageClient _client;
 
     public ElasticsearchClient(IElasticsSearchSettings settings)

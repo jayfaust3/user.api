@@ -32,13 +32,13 @@ public abstract class BaseCrudService<TDTO> : ICrudService<TDTO> where TDTO : cl
 
         TDTO? match = await _cacheService.GetItemAsync<TDTO>(cacheKey);
 
-        if (match == null)
+        if (match is null)
         {
             _logger.LogInformation($"Cache miss for entry with key: '{cacheKey}'");
 
             match = await _repository.FindOneAsync(id);
 
-            if (match != null)
+            if (match is not null)
             {
                 try
                 {
