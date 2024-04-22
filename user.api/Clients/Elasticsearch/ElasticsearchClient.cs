@@ -4,15 +4,15 @@ using ElasticsearchPackageClient = Elastic.Clients.Elasticsearch.ElasticsearchCl
 using Common.Models.Configuration;
 using Common.Models.Data;
 
-namespace Clients.Elasticsearch;
+namespace Clients.ElasticSearch;
 
-public class ElasticsearchClient : IElasticsearchClient
+public class ElasticSearchClient : IElasticSearchClient
 {
     public string IndexName { get; }
 
     private readonly ElasticsearchPackageClient _client;
 
-    public ElasticsearchClient(IElasticsSearchSettings settings)
+    public ElasticSearchClient(IElasticsSearchSettings settings)
     {
         IndexName = settings.IndexName;
         _client = GenerateClient(settings);
