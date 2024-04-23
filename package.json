@@ -1,0 +1,30 @@
+{
+  "name": "user.api",
+  "version": "1.0.0",
+  "description": "A REST API for User CRUD operations with an ElasticSearch backend",
+  "main": "index.js",
+  "scripts": {
+    "cdk": "cdklocal",
+    "cdk:synth": "cd cdk && cdk synth",
+    "precdk:synth:write": "npm run clean:cdk && mkdir -p cdk/cdk.out",
+    "cdk:synth:write": "cd cdk && cdk synth > cdk.out/template.yml",
+    "cdk:deploy": "cd cdk && cdk deploy",
+    "clean": "rm -rf cdk/cdk.out/* node_modules/* node_modules/.bin node_modules/.package-lock.json .cache",
+    "clean:cdk": "rm -rf cdk/cdk.out/asset.*",
+    "tsc": "tsc"
+  },
+  "devDependencies": {
+    "@swc-node/register": "^1.6.8",
+    "@swc/core": "^1.3.107",
+    "@types/aws-lambda": "^8.10.133",
+    "@types/node": "^20.11.10",
+    "aws-cdk-lib": "^2.124.0",
+    "constructs": "^10.2.59",
+    "esbuild": "^0.20.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {},
+  "author": "",
+  "license": "ISC"
+}

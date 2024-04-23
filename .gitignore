@@ -1,5 +1,6 @@
-bin
+Debug
 obj
 .vs
 launchSettings.json
 .env
+node_modules
