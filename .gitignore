@@ -4,3 +4,4 @@ obj
 launchSettings.json
 .env
 node_modules
+cdk.out

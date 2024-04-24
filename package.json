@@ -1,13 +1,12 @@
 {
   "name": "user.api",
   "version": "1.0.0",
-  "description": "A REST API for User CRUD operations with an ElasticSearch backend",
+  "description": "A REST API for User CRUD operations written in .Net with an ElasticSearch backend",
   "main": "index.js",
   "scripts": {
     "cdk": "cdklocal",
-    "cdk:synth": "cd cdk && cdk synth",
-    "precdk:synth:write": "npm run clean:cdk && mkdir -p cdk/cdk.out",
-    "cdk:synth:write": "cd cdk && cdk synth > cdk.out/template.yml",
+    "cdk:synth": "cd cdk && cdklocal synth",
+    "cdk:synth:write": "cd cdk && cdklocal synth > cdk.out/template.yml",
     "cdk:deploy": "cd cdk && cdk deploy",
     "clean": "rm -rf cdk/cdk.out/* node_modules/* node_modules/.bin node_modules/.package-lock.json .cache",
     "clean:cdk": "rm -rf cdk/cdk.out/asset.*",
