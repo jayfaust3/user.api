@@ -16,7 +16,7 @@ const buildId = uuid();
 
 const command = ``;
 
-exec("ls -la", (error, stdout, stderr) => {
+exec(command, (error, stdout, stderr) => {
     if (error) {
       console.log(`error: ${error.message}`);
       return;
