@@ -1,10 +1,12 @@
-import { config } from 'dotenv';
-import { exec } from 'child_process';
-import { SSM } from 'aws-sdk';
-import { v4 as uuid } from 'uuid';
+const { resolve } = require('path');
+const { exec } = require('child_process');
+const { config } = require('dotenv');
+const { v4: uuid }  = require('uuid');
+const { SSM } = require('aws-sdk');
 
-type PutParams = SSM.PutParameterRequest;
-type PutResult = SSM.PutParameterResult;
+const envFilePath = resolve(__dirname, '../.env');
+
+config({ path: envFilePath });
 
 const { DOCKER_REPOSITORY, DOCKER_USERNAME, DOCKER_PASSWORD } = process.env;
 
@@ -14,9 +16,7 @@ if (
     !DOCKER_PASSWORD
 ) throw new Error(`Environment is missing Docker credentials`);
 
-config();
-
-const pathToDockerfile = './user.api/Dockerfile';
+const pathToDockerfile = resolve(__dirname, '../user.api/Dockerfile');
 
 const imageName = 'user-service';
 

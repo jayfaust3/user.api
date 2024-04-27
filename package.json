@@ -11,7 +11,7 @@
     "cdk:deploy": "cd cdk && cdk deploy",
     "clean": "rm -rf cdk/cdk.out/* node_modules/* node_modules/.bin node_modules/.package-lock.json .cache",
     "clean:cdk": "rm -rf cdk/cdk.out/asset.*",
-    "publish:image": "npm run aws:login && ts-node ./scripts/publish-to-docker-registry.ts",
+    "publish:image": "npm run aws:login && node ./scripts/publish-to-docker-registry.js",
     "tsc": "tsc"
   },
   "devDependencies": {
