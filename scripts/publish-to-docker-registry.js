@@ -1,7 +1,6 @@
 const { resolve } = require('path');
 const { exec } = require('child_process');
 const { config } = require('dotenv');
-const { v4: uuid }  = require('uuid');
 const { SSM } = require('aws-sdk');
 
 const envFilePath = resolve(__dirname, '../.env');
@@ -20,14 +19,14 @@ const pathToDockerfile = resolve(__dirname, '../user.api/Dockerfile');
 
 const imageName = 'user-service';
 
-const buildTag = uuid();
+const buildTag = Date.now();
 
 const localImage = `${imageName}:${buildTag}`;
 
-const dockerImageURI = `${DOCKER_REPOSITORY}:${buildTag}`;
+const dockerImageURI = `${DOCKER_REPOSITORY}/${localImage}`;
 
 const command = `
-docker build -t ${localImage} -f ${pathToDockerfile}
+docker build -t ${localImage} -f ${pathToDockerfile} .
 
 docker tag ${localImage} ${dockerImageURI}
 
@@ -37,6 +36,8 @@ docker push ${dockerImageURI}
 
 docker logout ${DOCKER_REPOSITORY}
 `;
+
+console.log('running command', { command });
 
 exec(command, (error, stdout, stderr) => {
     if (error) {
