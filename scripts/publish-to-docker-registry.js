@@ -7,13 +7,21 @@ const envFilePath = resolve(__dirname, '../.env');
 
 config({ path: envFilePath });
 
-const { DOCKER_REPOSITORY, DOCKER_USERNAME, DOCKER_PASSWORD } = process.env;
+const {
+  DOCKER_REPOSITORY,
+  DOCKER_REGISTRY_IMAGE_URI_SSM_PARAM_NAME,
+  DOCKER_USERNAME,
+  DOCKER_PASSWORD
+} = process.env;
 
 if (
-    !DOCKER_REPOSITORY ||
-    !DOCKER_USERNAME ||
-    !DOCKER_PASSWORD
+  !DOCKER_REPOSITORY ||
+  !DOCKER_USERNAME ||
+  !DOCKER_PASSWORD
 ) throw new Error(`Environment is missing Docker credentials`);
+
+if (!DOCKER_REGISTRY_IMAGE_URI_SSM_PARAM_NAME)
+  throw new Error(`Environment is missing Docker registry image URI SSM param name`);
 
 const pathToDockerfile = resolve(__dirname, '../user.api/Dockerfile');
 
@@ -35,16 +43,37 @@ docker push ${dockerImageURI}
 docker logout ${DOCKER_REPOSITORY}
 `;
 
-console.log('running command', { command });
-
 exec(command, (error, stdout, stderr) => {
-    if (error) {
-      console.log(`error: ${error.message}`);
-      return;
+  if (error) {
+    console.log(`error: ${error.message}`);
+    return;
+  }
+
+  if (stderr) {
+    console.log(`stderr: ${stderr}`);
+    return;
+  }
+
+  console.log(`stdout: ${stdout}`);
+
+  console.log(`writing '${dockerImageURI}' to SSM for the key '${DOCKER_REGISTRY_IMAGE_URI_SSM_PARAM_NAME}'`);
+
+  const ssm = new SSM();
+
+  // Create the parameter
+  const putParameterParams = {
+    Name: DOCKER_REGISTRY_IMAGE_URI_SSM_PARAM_NAME,
+    Value: dockerImageURI,
+    Type: 'String',
+    Overwrite: true, // Set to true to update an existing parameter, false to create a new one
+  };
+
+  // Write the parameter to Parameter Store
+  ssm.putParameter(putParameterParams, (err, data) => {
+    if (err) {
+      console.error('Error writing parameter:', err);
+    } else {
+      console.log('Parameter written successfully:', data);
     }
-    if (stderr) {
-      console.log(`stderr: ${stderr}`);
-      return;
-    }
-    console.log(`stdout: ${stdout}`);
+  });
 });
