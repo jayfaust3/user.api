@@ -21,14 +21,12 @@ const imageName = 'user-service';
 
 const buildTag = Date.now();
 
-const localImage = `${imageName}:${buildTag}`;
-
-const dockerImageURI = `${DOCKER_REPOSITORY}/${localImage}`;
+const dockerImageURI = `${DOCKER_REPOSITORY}:${buildTag}`;
 
 const command = `
-docker build -t ${localImage} -f ${pathToDockerfile} .
+docker build -t ${imageName} -f ${pathToDockerfile} .
 
-docker tag ${localImage} ${dockerImageURI}
+docker tag ${imageName} ${dockerImageURI}
 
 echo ${DOCKER_PASSWORD} | docker login --username ${DOCKER_USERNAME} --password-stdin ${DOCKER_REPOSITORY}
 
