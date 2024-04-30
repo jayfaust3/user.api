@@ -31,7 +31,7 @@ const buildTag = Date.now();
 
 const dockerImageURI = `${DOCKER_REPOSITORY}:${buildTag}`;
 
-const command = `
+const publishCommand = `
 docker build -t ${imageName} -f ${pathToDockerfile} .
 
 docker tag ${imageName} ${dockerImageURI}
@@ -43,7 +43,7 @@ docker push ${dockerImageURI}
 docker logout ${DOCKER_REPOSITORY}
 `;
 
-exec(command, (error, stdout, stderr) => {
+exec(publishCommand, (error, stdout, stderr) => {
   if (error) {
     console.log(`error: ${error.message}`);
     return;
@@ -58,22 +58,42 @@ exec(command, (error, stdout, stderr) => {
 
   console.log(`writing '${dockerImageURI}' to SSM for the key '${DOCKER_REGISTRY_IMAGE_URI_SSM_PARAM_NAME}'`);
 
-  const ssm = new SSM();
+  const pushToSSMCommand = `
+  AWS_ACCESS_KEY_ID=fake AWS_SECRET_ACCESS_KEY=fake AWS_DEFAULT_REGION=us-east-1 aws dynamodb --endpoint-url http://localhost:4566 ssm put-parameter --name "${DOCKER_REGISTRY_IMAGE_URI_SSM_PARAM_NAME}" --value "${dockerImageURI}" --type "String"
+  `;
 
-  // Create the parameter
-  const putParameterParams = {
-    Name: DOCKER_REGISTRY_IMAGE_URI_SSM_PARAM_NAME,
-    Value: dockerImageURI,
-    Type: 'String',
-    Overwrite: true, // Set to true to update an existing parameter, false to create a new one
-  };
-
-  // Write the parameter to Parameter Store
-  ssm.putParameter(putParameterParams, (err, data) => {
-    if (err) {
-      console.error('Error writing parameter:', err);
-    } else {
-      console.log('Parameter written successfully:', data);
+  exec(publishCommand, (error, stdout, stderr) => {
+    if (error) {
+      console.log(`error: ${error.message}`);
+      return;
     }
+  
+    if (stderr) {
+      console.log(`stderr: ${stderr}`);
+      return;
+    }
+  
+    console.log(`stdout: ${stdout}`);
+
+    console.log(`successfully pushed to param value to SSM`);
   });
+
+  // const ssm = new SSM();
+
+  // // Create the parameter
+  // const putParameterParams = {
+  //   Name: DOCKER_REGISTRY_IMAGE_URI_SSM_PARAM_NAME,
+  //   Value: dockerImageURI,
+  //   Type: 'String',
+  //   Overwrite: true, // Set to true to update an existing parameter, false to create a new one
+  // };
+
+  // // Write the parameter to Parameter Store
+  // ssm.putParameter(putParameterParams, (err, data) => {
+  //   if (err) {
+  //     console.error('Error writing parameter:', err);
+  //   } else {
+  //     console.log('Parameter written successfully:', data);
+  //   }
+  // });
 });
