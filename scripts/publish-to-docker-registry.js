@@ -34,14 +34,24 @@ const dockerImageURI = `${DOCKER_REPOSITORY}:${buildTag}`;
 const publishCommand = `
 docker build -t ${imageName} -f ${pathToDockerfile} .
 
+echo "Creating tag"
 docker tag ${imageName} ${dockerImageURI}
+echo "Tag created"
 
+echo "logging into Docker"
 echo ${DOCKER_PASSWORD} | docker login --username ${DOCKER_USERNAME} --password-stdin ${DOCKER_REPOSITORY}
+echo "logged into Docker"
 
+echo "pushing to Docker"
 docker push ${dockerImageURI}
+echo "pushed to Docker"
 
+echo "logging out of Docker"
 docker logout ${DOCKER_REPOSITORY}
+echo "logged out of Docker"
 `;
+
+console.log('running publish command', { publishCommand });
 
 exec(publishCommand, (error, stdout, stderr) => {
   if (error) {
@@ -61,8 +71,8 @@ exec(publishCommand, (error, stdout, stderr) => {
   const pushToSSMCommand = `
   AWS_ACCESS_KEY_ID=fake AWS_SECRET_ACCESS_KEY=fake AWS_DEFAULT_REGION=us-east-1 aws dynamodb --endpoint-url http://localhost:4566 ssm put-parameter --name "${DOCKER_REGISTRY_IMAGE_URI_SSM_PARAM_NAME}" --value "${dockerImageURI}" --type "String"
   `;
-
-  exec(publishCommand, (error, stdout, stderr) => {
+  
+  exec(pushToSSMCommand, (error, stdout, stderr) => {
     if (error) {
       console.log(`error: ${error.message}`);
       return;
