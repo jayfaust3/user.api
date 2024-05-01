@@ -1,7 +1,7 @@
 const { resolve } = require('path');
 const { exec } = require('child_process');
 const { config } = require('dotenv');
-const { SSM } = require('aws-sdk');
+// const { SSM } = require('aws-sdk');
 
 const envFilePath = resolve(__dirname, '../.env');
 
@@ -32,26 +32,20 @@ const buildTag = Date.now();
 const dockerImageURI = `${DOCKER_REPOSITORY}:${buildTag}`;
 
 const publishCommand = `
-docker build -t ${imageName} -f ${pathToDockerfile} .
+echo ${DOCKER_PASSWORD} | docker login --username ${DOCKER_USERNAME} --password-stdin &&
 
-echo "Creating tag"
-docker tag ${imageName} ${dockerImageURI}
-echo "Tag created"
+docker build -t ${imageName} -f ${pathToDockerfile} . &&
 
-echo "logging into Docker"
-echo ${DOCKER_PASSWORD} | docker login --username ${DOCKER_USERNAME} --password-stdin ${DOCKER_REPOSITORY}
-echo "logged into Docker"
+docker tag ${imageName} ${dockerImageURI} &&
 
-echo "pushing to Docker"
-docker push ${dockerImageURI}
-echo "pushed to Docker"
+docker push ${dockerImageURI} &&
 
-echo "logging out of Docker"
-docker logout ${DOCKER_REPOSITORY}
-echo "logged out of Docker"
+docker logout &&
+
+AWS_ACCESS_KEY_ID=fake AWS_SECRET_ACCESS_KEY=fake AWS_DEFAULT_REGION=us-east-1 aws ssm --endpoint-url http://localhost:4566 put-parameter --name "${DOCKER_REGISTRY_IMAGE_URI_SSM_PARAM_NAME}" --value "${dockerImageURI}" --type "String"
 `;
 
-console.log('running publish command', { publishCommand });
+// console.log('running publish command', { publishCommand });
 
 exec(publishCommand, (error, stdout, stderr) => {
   if (error) {
@@ -66,27 +60,27 @@ exec(publishCommand, (error, stdout, stderr) => {
 
   console.log(`stdout: ${stdout}`);
 
-  console.log(`writing '${dockerImageURI}' to SSM for the key '${DOCKER_REGISTRY_IMAGE_URI_SSM_PARAM_NAME}'`);
+  // console.log(`writing '${dockerImageURI}' to SSM for the key '${DOCKER_REGISTRY_IMAGE_URI_SSM_PARAM_NAME}'`);
 
-  const pushToSSMCommand = `
-  AWS_ACCESS_KEY_ID=fake AWS_SECRET_ACCESS_KEY=fake AWS_DEFAULT_REGION=us-east-1 aws dynamodb --endpoint-url http://localhost:4566 ssm put-parameter --name "${DOCKER_REGISTRY_IMAGE_URI_SSM_PARAM_NAME}" --value "${dockerImageURI}" --type "String"
-  `;
+  // const pushToSSMCommand = `
+  // AWS_ACCESS_KEY_ID=fake AWS_SECRET_ACCESS_KEY=fake AWS_DEFAULT_REGION=us-east-1 aws dynamodb --endpoint-url http://localhost:4566 ssm put-parameter --name "${DOCKER_REGISTRY_IMAGE_URI_SSM_PARAM_NAME}" --value "${dockerImageURI}" --type "String"
+  // `;
   
-  exec(pushToSSMCommand, (error, stdout, stderr) => {
-    if (error) {
-      console.log(`error: ${error.message}`);
-      return;
-    }
+  // exec(pushToSSMCommand, (error, stdout, stderr) => {
+  //   if (error) {
+  //     console.log(`error: ${error.message}`);
+  //     return;
+  //   }
   
-    if (stderr) {
-      console.log(`stderr: ${stderr}`);
-      return;
-    }
+  //   if (stderr) {
+  //     console.log(`stderr: ${stderr}`);
+  //     return;
+  //   }
   
-    console.log(`stdout: ${stdout}`);
+  //   console.log(`stdout: ${stdout}`);
 
-    console.log(`successfully pushed to param value to SSM`);
-  });
+  //   console.log(`successfully pushed to param value to SSM`);
+  // });
 
   // const ssm = new SSM();
 
