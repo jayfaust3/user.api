@@ -1,13 +1,14 @@
 const { resolve } = require('path');
 const { exec } = require('child_process');
+const AWS = require('aws-sdk');
 const { config } = require('dotenv');
-// const { SSM } = require('aws-sdk');
 
 const envFilePath = resolve(__dirname, '../.env');
 
 config({ path: envFilePath });
 
 const {
+  AWS_ENDPOINT,
   DOCKER_REPOSITORY,
   DOCKER_REGISTRY_IMAGE_URI_SSM_PARAM_NAME,
   DOCKER_USERNAME,
@@ -23,81 +24,51 @@ if (
 if (!DOCKER_REGISTRY_IMAGE_URI_SSM_PARAM_NAME)
   throw new Error(`Environment is missing Docker registry image URI SSM param name`);
 
-const pathToDockerfile = resolve(__dirname, '../user.api/Dockerfile');
-
 const imageName = 'user-service';
 
 const buildTag = Date.now();
 
 const dockerImageURI = `${DOCKER_REPOSITORY}:${buildTag}`;
 
-const publishCommand = `
-echo ${DOCKER_PASSWORD} | docker login --username ${DOCKER_USERNAME} --password-stdin &&
+const ssm = new AWS.SSM({ endpoint: AWS_ENDPOINT });
 
-docker build -t ${imageName} -f ${pathToDockerfile} . &&
+const putParameterParams = {
+  Name: DOCKER_REGISTRY_IMAGE_URI_SSM_PARAM_NAME,
+  Value: dockerImageURI,
+  Type: 'String',
+  Overwrite: true,
+};
 
-docker tag ${imageName} ${dockerImageURI} &&
+ssm.putParameter(putParameterParams, (err, data) => {
+  if (err) {
+    console.error('Error writing parameter:', err);
+  } else {
+    const pathToDockerfile = resolve(__dirname, '../user.api/Dockerfile');
 
-docker push ${dockerImageURI} &&
+    const publishCommand = `
+    echo ${DOCKER_PASSWORD} | docker login --username ${DOCKER_USERNAME} --password-stdin &&
 
-docker logout &&
+    docker build -t ${imageName} -f ${pathToDockerfile} . &&
 
-AWS_ACCESS_KEY_ID=fake AWS_SECRET_ACCESS_KEY=fake AWS_DEFAULT_REGION=us-east-1 aws ssm --endpoint-url http://localhost:4566 put-parameter --name "${DOCKER_REGISTRY_IMAGE_URI_SSM_PARAM_NAME}" --value "${dockerImageURI}" --type "String"
-`;
+    docker tag ${imageName} ${dockerImageURI} &&
 
-// console.log('running publish command', { publishCommand });
+    docker push ${dockerImageURI} &&
 
-exec(publishCommand, (error, stdout, stderr) => {
-  if (error) {
-    console.log(`error: ${error.message}`);
-    return;
+    docker logout
+    `;
+
+    exec(publishCommand, (error, stdout, stderr) => {
+      if (error) {
+        console.log(`error: ${error.message}`);
+        return;
+      }
+    
+      if (stderr) {
+        console.log(`stderr: ${stderr}`);
+        return;
+      }
+    
+      console.log(`stdout: ${stdout}`);
+    });
   }
-
-  if (stderr) {
-    console.log(`stderr: ${stderr}`);
-    return;
-  }
-
-  console.log(`stdout: ${stdout}`);
-
-  // console.log(`writing '${dockerImageURI}' to SSM for the key '${DOCKER_REGISTRY_IMAGE_URI_SSM_PARAM_NAME}'`);
-
-  // const pushToSSMCommand = `
-  // AWS_ACCESS_KEY_ID=fake AWS_SECRET_ACCESS_KEY=fake AWS_DEFAULT_REGION=us-east-1 aws dynamodb --endpoint-url http://localhost:4566 ssm put-parameter --name "${DOCKER_REGISTRY_IMAGE_URI_SSM_PARAM_NAME}" --value "${dockerImageURI}" --type "String"
-  // `;
-  
-  // exec(pushToSSMCommand, (error, stdout, stderr) => {
-  //   if (error) {
-  //     console.log(`error: ${error.message}`);
-  //     return;
-  //   }
-  
-  //   if (stderr) {
-  //     console.log(`stderr: ${stderr}`);
-  //     return;
-  //   }
-  
-  //   console.log(`stdout: ${stdout}`);
-
-  //   console.log(`successfully pushed to param value to SSM`);
-  // });
-
-  // const ssm = new SSM();
-
-  // // Create the parameter
-  // const putParameterParams = {
-  //   Name: DOCKER_REGISTRY_IMAGE_URI_SSM_PARAM_NAME,
-  //   Value: dockerImageURI,
-  //   Type: 'String',
-  //   Overwrite: true, // Set to true to update an existing parameter, false to create a new one
-  // };
-
-  // // Write the parameter to Parameter Store
-  // ssm.putParameter(putParameterParams, (err, data) => {
-  //   if (err) {
-  //     console.error('Error writing parameter:', err);
-  //   } else {
-  //     console.log('Parameter written successfully:', data);
-  //   }
-  // });
 });
