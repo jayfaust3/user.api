@@ -1,12 +1,24 @@
 import { App, Stack, StackProps } from 'aws-cdk-lib/core';
+import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 import { Vpc } from 'aws-cdk-lib/aws-ec2';
 import { ContainerImage } from 'aws-cdk-lib/aws-ecs';
 import * as ecsPatterns from 'aws-cdk-lib/aws-ecs-patterns';
 import { HttpIntegration, RestApi } from 'aws-cdk-lib/aws-apigateway';
 
+interface ApiStackProps extends StackProps {
+  environment: {
+    dockerRegistryImageUriSsmParamName: string
+  }
+}
+
 export class ApiStack extends Stack {
-  constructor(scope: App, id: string, props?: StackProps) {
+  constructor(scope: App, id: string, props: ApiStackProps) {
     super(scope, id, props);
+
+    const { environment } = props;
+    const {
+      dockerRegistryImageUriSsmParamName
+    } = environment;
 
     // Create a VPC
     const vpc = new Vpc(this, 'UserServiceVpc', {
@@ -17,7 +29,7 @@ export class ApiStack extends Stack {
     const fargateService = new ecsPatterns.ApplicationLoadBalancedFargateService(this, 'UserService', {
       vpc,
       taskImageOptions: {
-        image: ContainerImage.fromRegistry('your-docker-image'), // Replace 'your-docker-image' with the URI of your Docker image
+        image: ContainerImage.fromRegistry(dockerRegistryImageUriSsmParamName),
       },
     });
 
@@ -29,7 +41,7 @@ export class ApiStack extends Stack {
 
     // Define GET /users endpoint
     userResource.addMethod('GET', new HttpIntegration(
-        `http://${fargateService.loadBalancer.loadBalancerDnsName}/users`,
+        `http://${fargateService.loadBalancer.loadBalancerDnsName}/api/users`,
     ));
 
     // Define GET /users/{userId} endpoint

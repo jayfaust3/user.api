@@ -4,11 +4,11 @@
   "description": "A REST API for User CRUD operations written in .Net with an ElasticSearch backend",
   "main": "index.js",
   "scripts": {
-    "aws:login": "npm run cdk bootstrap aws://000000000000/us-east-1",
     "cdk": "cdklocal",
+    "cdk:bootstrap": "npm run cdk bootstrap aws://000000000000/us-east-1",
     "cdk:synth": "cd cdk && cdklocal synth",
     "cdk:synth:write": "cd cdk && cdklocal synth > cdk.out/template.yml",
-    "cdk:deploy": "cd cdk && cdk deploy",
+    "cdk:deploy": "cd cdk && cdklocal deploy --all",
     "clean": "rm -rf cdk/cdk.out/* node_modules/* node_modules/.bin node_modules/.package-lock.json .cache",
     "clean:cdk": "rm -rf cdk/cdk.out/asset.*",
     "publish:image": "node ./scripts/publish-to-docker-registry.js",
