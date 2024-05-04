@@ -1,5 +1,4 @@
 import { App, Stack, StackProps } from 'aws-cdk-lib/core';
-import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 import { Vpc } from 'aws-cdk-lib/aws-ec2';
 import { ContainerImage } from 'aws-cdk-lib/aws-ecs';
 import * as ecsPatterns from 'aws-cdk-lib/aws-ecs-patterns';
@@ -36,25 +35,31 @@ export class ApiStack extends Stack {
     // Create an API Gateway
     const api = new RestApi(this, 'UserApiGateway');
 
-    // Define user resource
-    const userResource = api.root.addResource('users');
+    // Define API root
+    const apiResource = api.root.addResource('api');
+
+    // Define user resources
+    const userResource = apiResource.addResource('users');
+    const userByIdResource = userResource.addResource('{userId}');
+
+    // Define integration
+    const httpIntegration = new HttpIntegration(
+      `http://${fargateService.loadBalancer.loadBalancerDnsName}`,
+    );
 
     // Define GET /users endpoint
-    userResource.addMethod('GET', new HttpIntegration(
-        `http://${fargateService.loadBalancer.loadBalancerDnsName}/api/users`,
-    ));
+    userResource.addMethod('GET', httpIntegration);
 
     // Define GET /users/{userId} endpoint
-    const userByIdResource = userResource.addResource('{userId}');
-    userByIdResource.addMethod('GET', new HttpIntegration(`${fargateService.loadBalancer.loadBalancerDnsName}/users/{userId}`));
+    userByIdResource.addMethod('GET', httpIntegration);
 
     // Define POST /users endpoint
-    userResource.addMethod('POST', new HttpIntegration(`${fargateService.loadBalancer.loadBalancerDnsName}/users`));
+    userResource.addMethod('POST', httpIntegration);
 
     // Define PUT /users/{userId} endpoint
-    userByIdResource.addMethod('PUT', new HttpIntegration(`${fargateService.loadBalancer.loadBalancerDnsName}/users/{userId}`));
+    userByIdResource.addMethod('PUT', httpIntegration);
 
     // Define DELETE /users/{userId} endpoint
-    userByIdResource.addMethod('DELETE', new HttpIntegration(`${fargateService.loadBalancer.loadBalancerDnsName}/users/{userId}`));
+    userByIdResource.addMethod('DELETE', httpIntegration);
   }
 }
