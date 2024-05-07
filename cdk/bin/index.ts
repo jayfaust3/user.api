@@ -33,3 +33,5 @@ const apiStackProps = {
 
 new DbStack(app, 'UserDbStack');
 new ApiStack(app, 'UserApiStack', apiStackProps);
+
+app.synth();

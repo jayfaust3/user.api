@@ -1,20 +1,16 @@
-import { App, Stack, StackProps } from 'aws-cdk-lib/core';
+import { App, Stack } from 'aws-cdk-lib/core';
 import { Vpc } from 'aws-cdk-lib/aws-ec2';
 import { ContainerImage } from 'aws-cdk-lib/aws-ecs';
-import * as ecsPatterns from 'aws-cdk-lib/aws-ecs-patterns';
+import { ApplicationLoadBalancedFargateService } from 'aws-cdk-lib/aws-ecs-patterns';
 import { HttpIntegration, RestApi } from 'aws-cdk-lib/aws-apigateway';
-
-interface ApiStackProps extends StackProps {
-  environment: {
-    dockerRegistryImageUriSsmParamName: string
-  }
-}
+import { ApiStackProps } from '../types';
 
 export class ApiStack extends Stack {
   constructor(scope: App, id: string, props: ApiStackProps) {
     super(scope, id, props);
 
     const { environment } = props;
+
     const {
       dockerRegistryImageUriSsmParamName
     } = environment;
@@ -25,11 +21,15 @@ export class ApiStack extends Stack {
     });
 
     // Create a Fargate service
-    const fargateService = new ecsPatterns.ApplicationLoadBalancedFargateService(this, 'UserService', {
+    const fargateService = new ApplicationLoadBalancedFargateService(this, 'UserService', {
       vpc,
       taskImageOptions: {
         image: ContainerImage.fromRegistry(dockerRegistryImageUriSsmParamName),
+        environment: {
+
+        },
       },
+      desiredCount: 2,
     });
 
     // Create an API Gateway
