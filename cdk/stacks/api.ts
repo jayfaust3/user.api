@@ -4,9 +4,6 @@ import { ApplicationLoadBalancedFargateService } from 'aws-cdk-lib/aws-ecs-patte
 import { HttpIntegration, RestApi } from 'aws-cdk-lib/aws-apigateway';
 import { CfnOutput } from 'aws-cdk-lib/core';
 import { Cluster, ContainerImage, FargateTaskDefinition, LogDrivers } from 'aws-cdk-lib/aws-ecs';
-import { ApplicationLoadBalancer, ApplicationProtocol } from 'aws-cdk-lib/aws-elasticloadbalancingv2';
-import * as logs from 'aws-cdk-lib/aws-logs';
-
 import { ApiStackProps } from '../types';
 
 export class ApiStack extends Stack {
@@ -34,7 +31,7 @@ export class ApiStack extends Stack {
     // Add a container to the task definition
     const container = taskDefinition.addContainer('UserServiceContainer', {
       image: ContainerImage.fromRegistry(dockerRegistryImageUriSsmParamName),
-      logging: LogDrivers.awsLogs({ streamPrefix: 'user-service' }) // Configure logging to CloudWatch Logs
+      logging: LogDrivers.awsLogs({ streamPrefix: 'user-service' }), // Configure logging to CloudWatch Logs
     });
 
     // Expose a port
@@ -42,28 +39,11 @@ export class ApiStack extends Stack {
       containerPort: 80
     });
 
-    // Create an Application Load Balancer
-    const alb = new ApplicationLoadBalancer(this, 'UserServiceALB', {
-      vpc: vpc
-    });
-
-    // Create a listener
-    const listener = alb.addListener('UserServiceALBListener', {
-      port: 80,
-      open: true
-    });
-
     // Create a Fargate service
     const service = new ApplicationLoadBalancedFargateService(this, 'UserService', {
       cluster,
       taskDefinition,
       desiredCount: 2,
-    });
-
-    // Create a target group
-    const targetGroup = listener.addTargets('UserServiceTargetGroup', {
-      port: 80,
-      targets: [service.service]
     });
 
     // Create an API Gateway
@@ -78,7 +58,7 @@ export class ApiStack extends Stack {
 
     // Define integration
     const httpIntegration = new HttpIntegration(
-      `http://${alb.loadBalancerDnsName}`,
+      `http://${service.loadBalancer.loadBalancerDnsName}:80`,
     );
 
     // Define GET /users endpoint
@@ -102,7 +82,7 @@ export class ApiStack extends Stack {
     });
 
     new CfnOutput(this, 'UserApiGatewayEndpoint', {
-      value: api.arnForExecuteApi()
+      value: api.url
     });
   }
 }
