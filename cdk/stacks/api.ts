@@ -22,16 +22,21 @@ export class ApiStack extends Stack {
     });
 
     const cluster = new Cluster(this, 'UserServiceCluster', {
-      vpc: vpc
+      vpc: vpc,
+      clusterName: 'UserServiceCluster',
+      containerInsights: true
     });
 
     // Create a Fargate task definition
-    const taskDefinition = new FargateTaskDefinition(this, 'UserServiceTaskDefinition');
+    const taskDefinition = new FargateTaskDefinition(this, 'UserServiceTaskDefinition', {
+      cpu: 256,
+      memoryLimitMiB: 512,
+    });
 
     // Add a container to the task definition
     const container = taskDefinition.addContainer('UserServiceContainer', {
       image: ContainerImage.fromRegistry(dockerRegistryImageUriSsmParamName),
-      logging: LogDrivers.awsLogs({ streamPrefix: 'user-service' }), // Configure logging to CloudWatch Logs
+      logging: LogDrivers.awsLogs({ streamPrefix: 'user-service' }), // Configure logging to CloudWatch Logs,
     });
 
     // Expose a port
@@ -43,11 +48,18 @@ export class ApiStack extends Stack {
     const service = new ApplicationLoadBalancedFargateService(this, 'UserService', {
       cluster,
       taskDefinition,
-      desiredCount: 2,
+      circuitBreaker: {
+        rollback: true,
+      },
+      cpu: 256,
+      memoryLimitMiB: 512,
+      desiredCount: 1,
     });
 
     // Create an API Gateway
     const api = new RestApi(this, 'UserApiGateway');
+
+    api.root.addProxy
 
     // Define API root
     const apiResource = api.root.addResource('api');
