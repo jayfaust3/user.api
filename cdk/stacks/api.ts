@@ -71,6 +71,7 @@ export class ApiStack extends Stack {
       cpu: 256,
       memoryLimitMiB: 512,
       desiredCount: 1,
+      publicLoadBalancer: true
     });
 
     const loadBalancer: ApplicationLoadBalancer = service.loadBalancer;
