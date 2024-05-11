@@ -1,10 +1,13 @@
+import { resolve } from 'path';
 import { App, Stack } from 'aws-cdk-lib/core';
 import { Vpc } from 'aws-cdk-lib/aws-ec2';
 import { ApplicationLoadBalancedFargateService } from 'aws-cdk-lib/aws-ecs-patterns';
-import { HttpIntegration, RestApi } from 'aws-cdk-lib/aws-apigateway';
+import { ConnectionType, Cors, HttpIntegration, RestApi, VpcLink } from 'aws-cdk-lib/aws-apigateway';
 import { CfnOutput } from 'aws-cdk-lib/core';
 import { Cluster, ContainerImage, FargateTaskDefinition, LogDrivers } from 'aws-cdk-lib/aws-ecs';
 import { ApiStackProps } from '../types';
+import { ApplicationLoadBalancer } from 'aws-cdk-lib/aws-elasticloadbalancingv2';
+import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 
 export class ApiStack extends Stack {
   constructor(scope: App, id: string, props: ApiStackProps) {
@@ -17,12 +20,12 @@ export class ApiStack extends Stack {
     } = environment;
 
     // Create a VPC
-    const vpc = new Vpc(this, 'UserServiceVpc', {
-      maxAzs: 2,
-    });
+    // const vpc = new Vpc(this, 'UserServiceVpc', {
+    //   maxAzs: 2,
+    // });
 
     const cluster = new Cluster(this, 'UserServiceCluster', {
-      vpc: vpc,
+      // vpc: vpc,
       clusterName: 'UserServiceCluster',
       containerInsights: true
     });
@@ -33,10 +36,24 @@ export class ApiStack extends Stack {
       memoryLimitMiB: 512,
     });
 
+    const registryUri = StringParameter.valueForStringParameter(this, dockerRegistryImageUriSsmParamName);
+
+    new CfnOutput(this, 'UserServiceImageRegistryUri', {
+      value: registryUri
+    });
+
+    const image = ContainerImage.fromRegistry(registryUri);
+
     // Add a container to the task definition
     const container = taskDefinition.addContainer('UserServiceContainer', {
-      image: ContainerImage.fromRegistry(dockerRegistryImageUriSsmParamName),
+      image,
       logging: LogDrivers.awsLogs({ streamPrefix: 'user-service' }), // Configure logging to CloudWatch Logs,
+      environment: {
+        DISABLE_AUTH: 'true',
+        SERVICE_CALL_RETRY_COUNT: '3',
+        OPENSEARCH_NODE_URIS: 'http://opensearch-master-node:9200',
+        OPENSEARCH_USER_INDEX_NAME: 'users',
+      }
     });
 
     // Expose a port
@@ -56,10 +73,15 @@ export class ApiStack extends Stack {
       desiredCount: 1,
     });
 
-    // Create an API Gateway
-    const api = new RestApi(this, 'UserApiGateway');
+    const loadBalancer: ApplicationLoadBalancer = service.loadBalancer;
 
-    api.root.addProxy
+    // Create an API Gateway
+    const api = new RestApi(this, 'UserApiGateway', {
+      defaultCorsPreflightOptions: {
+        allowOrigins: Cors.ALL_ORIGINS,
+        allowMethods: [...Cors.DEFAULT_HEADERS],
+      },
+    });
 
     // Define API root
     const apiResource = api.root.addResource('api');
@@ -68,29 +90,79 @@ export class ApiStack extends Stack {
     const userResource = apiResource.addResource('users');
     const userByIdResource = userResource.addResource('{userId}');
 
-    // Define integration
-    const httpIntegration = new HttpIntegration(
-      `http://${service.loadBalancer.loadBalancerDnsName}:80`,
+    // Define GET /users endpoint
+    userResource.addMethod(
+      'GET',
+      new HttpIntegration(
+        `http://${loadBalancer.loadBalancerDnsName}/api/users`,
+        {
+          httpMethod: 'GET',
+          options: {
+            connectionType: ConnectionType.INTERNET
+          },
+        }
+      )
     );
 
-    // Define GET /users endpoint
-    userResource.addMethod('GET', httpIntegration);
-
     // Define GET /users/{userId} endpoint
-    userByIdResource.addMethod('GET', httpIntegration);
+    userByIdResource.addMethod(
+      'GET',
+      new HttpIntegration(
+        `http://${loadBalancer.loadBalancerDnsName}/api/users/{userId}`,
+        {
+          httpMethod: 'GET',
+          options: {
+            connectionType: ConnectionType.INTERNET
+          },
+        }
+      )
+    );
 
     // Define POST /users endpoint
-    userResource.addMethod('POST', httpIntegration);
+    userResource.addMethod(
+      'POST',
+      new HttpIntegration(
+        `http://${loadBalancer.loadBalancerDnsName}/api/users`,
+        {
+          httpMethod: 'POST',
+          options: {
+            connectionType: ConnectionType.INTERNET
+          },
+        }
+      )
+    );
 
     // Define PUT /users/{userId} endpoint
-    userByIdResource.addMethod('PUT', httpIntegration);
+    userByIdResource.addMethod(
+      'PUT',
+      new HttpIntegration(
+        `http://${loadBalancer.loadBalancerDnsName}/api/users/{userId}`,
+        {
+          httpMethod: 'PUT',
+          options: {
+            connectionType: ConnectionType.INTERNET
+          },
+        }
+      )
+    );
 
     // Define DELETE /users/{userId} endpoint
-    userByIdResource.addMethod('DELETE', httpIntegration);
+    userByIdResource.addMethod(
+      'DELETE',
+      new HttpIntegration(
+        `http://${loadBalancer.loadBalancerDnsName}/api/users/{userId}`,
+        {
+          httpMethod: 'DELETE',
+          options: {
+            connectionType: ConnectionType.INTERNET
+          },
+        }
+      )
+    );
 
     // Output the endpoint URL
     new CfnOutput(this, 'UserServiceEndpoint', {
-      value: service.loadBalancer.loadBalancerDnsName
+      value: loadBalancer.loadBalancerDnsName
     });
 
     new CfnOutput(this, 'UserApiGatewayEndpoint', {
