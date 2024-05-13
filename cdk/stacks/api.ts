@@ -2,9 +2,9 @@ import { resolve } from 'path';
 import { App, Stack } from 'aws-cdk-lib/core';
 import { Vpc } from 'aws-cdk-lib/aws-ec2';
 import { ApplicationLoadBalancedFargateService } from 'aws-cdk-lib/aws-ecs-patterns';
-import { ConnectionType, Cors, HttpIntegration, RestApi, VpcLink } from 'aws-cdk-lib/aws-apigateway';
+import { ConnectionType, Cors, HttpIntegration, Integration, RestApi, VpcLink } from 'aws-cdk-lib/aws-apigateway';
 import { CfnOutput } from 'aws-cdk-lib/core';
-import { Cluster, ContainerImage, FargateTaskDefinition, LogDrivers } from 'aws-cdk-lib/aws-ecs';
+import { Cluster, ContainerImage, FargateService, FargateTaskDefinition, LogDrivers } from 'aws-cdk-lib/aws-ecs';
 import { ApiStackProps } from '../types';
 import { ApplicationLoadBalancer } from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import { StringParameter } from 'aws-cdk-lib/aws-ssm';
@@ -20,12 +20,12 @@ export class ApiStack extends Stack {
     } = environment;
 
     // Create a VPC
-    // const vpc = new Vpc(this, 'UserServiceVpc', {
-    //   maxAzs: 2,
-    // });
+    const vpc = new Vpc(this, 'UserServiceVpc', {
+      maxAzs: 2,
+    });
 
     const cluster = new Cluster(this, 'UserServiceCluster', {
-      // vpc: vpc,
+      vpc: vpc,
       clusterName: 'UserServiceCluster',
       containerInsights: true
     });
@@ -53,13 +53,37 @@ export class ApiStack extends Stack {
         SERVICE_CALL_RETRY_COUNT: '3',
         OPENSEARCH_NODE_URIS: 'http://opensearch-master-node:9200',
         OPENSEARCH_USER_INDEX_NAME: 'users',
-      }
+      },
+      portMappings: [
+        {
+          containerPort: 80
+        }
+      ]
     });
 
-    // Expose a port
-    container.addPortMappings({
-      containerPort: 80
-    });
+    // const service = new FargateService(this, 'UserService', {
+    //   cluster,
+    //   taskDefinition,
+    //   circuitBreaker: {
+    //     rollback: true,
+    //   },
+    //   desiredCount: 1,
+    //   assignPublicIp: true
+    // });
+
+    // const loadBalancer = new ApplicationLoadBalancer(this, 'UserServiceLoadBalancer', {
+    //   vpc: vpc,
+    //   internetFacing: true // Expose the ALB to the internet
+    // });
+
+    // const listener = loadBalancer.addListener('UserServiceLoadBalancerListener', {
+    //   port: 80
+    // });
+
+    // listener.addTargets('UserServiceLoadBalancerTargets', {
+    //   targets: [service],
+    //   port: 80
+    // });
 
     // Create a Fargate service
     const service = new ApplicationLoadBalancedFargateService(this, 'UserService', {
@@ -68,6 +92,15 @@ export class ApiStack extends Stack {
       circuitBreaker: {
         rollback: true,
       },
+      // taskImageOptions: {
+      //   image,
+      //   environment: {
+      //     DISABLE_AUTH: 'true',
+      //     SERVICE_CALL_RETRY_COUNT: '3',
+      //     OPENSEARCH_NODE_URIS: 'http://opensearch-master-node:9200',
+      //     OPENSEARCH_USER_INDEX_NAME: 'users',
+      //   }
+      // },
       cpu: 256,
       memoryLimitMiB: 512,
       desiredCount: 1,
@@ -76,11 +109,14 @@ export class ApiStack extends Stack {
 
     const loadBalancer: ApplicationLoadBalancer = service.loadBalancer;
 
+    const backendServiceUrl = `http://${loadBalancer.loadBalancerDnsName}`;
+
     // Create an API Gateway
     const api = new RestApi(this, 'UserApiGateway', {
       defaultCorsPreflightOptions: {
         allowOrigins: Cors.ALL_ORIGINS,
-        allowMethods: [...Cors.DEFAULT_HEADERS],
+        allowMethods: Cors.ALL_METHODS,
+        allowHeaders: Cors.DEFAULT_HEADERS
       },
     });
 
@@ -95,7 +131,7 @@ export class ApiStack extends Stack {
     userResource.addMethod(
       'GET',
       new HttpIntegration(
-        `http://${loadBalancer.loadBalancerDnsName}/api/users`,
+        `${backendServiceUrl}/api/users`,
         {
           httpMethod: 'GET',
           options: {
@@ -109,7 +145,7 @@ export class ApiStack extends Stack {
     userByIdResource.addMethod(
       'GET',
       new HttpIntegration(
-        `http://${loadBalancer.loadBalancerDnsName}/api/users/{userId}`,
+        `${backendServiceUrl}/api/users/{userId}`,
         {
           httpMethod: 'GET',
           options: {
@@ -123,7 +159,7 @@ export class ApiStack extends Stack {
     userResource.addMethod(
       'POST',
       new HttpIntegration(
-        `http://${loadBalancer.loadBalancerDnsName}/api/users`,
+        `${backendServiceUrl}/api/users`,
         {
           httpMethod: 'POST',
           options: {
@@ -137,7 +173,7 @@ export class ApiStack extends Stack {
     userByIdResource.addMethod(
       'PUT',
       new HttpIntegration(
-        `http://${loadBalancer.loadBalancerDnsName}/api/users/{userId}`,
+        `${backendServiceUrl}/api/users/{userId}`,
         {
           httpMethod: 'PUT',
           options: {
@@ -151,7 +187,7 @@ export class ApiStack extends Stack {
     userByIdResource.addMethod(
       'DELETE',
       new HttpIntegration(
-        `http://${loadBalancer.loadBalancerDnsName}/api/users/{userId}`,
+        `${backendServiceUrl}/api/users/{userId}`,
         {
           httpMethod: 'DELETE',
           options: {
