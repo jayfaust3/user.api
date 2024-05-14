@@ -1,4 +1,3 @@
-import { resolve } from 'path';
 import { App, Stack } from 'aws-cdk-lib/core';
 import { Vpc } from 'aws-cdk-lib/aws-ec2';
 import { ApplicationLoadBalancedFargateService } from 'aws-cdk-lib/aws-ecs-patterns';
@@ -35,7 +34,8 @@ export class ApiStack extends Stack {
       cpu: 256,
       memoryLimitMiB: 512,
     });
-
+    
+    // const registryUri = 'amazon/amazon-ecs-sample';
     const registryUri = StringParameter.valueForStringParameter(this, dockerRegistryImageUriSsmParamName);
 
     new CfnOutput(this, 'UserServiceImageRegistryUri', {
