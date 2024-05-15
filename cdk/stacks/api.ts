@@ -1,12 +1,11 @@
-import { App, Stack } from 'aws-cdk-lib/core';
+import { App, CfnOutput, Stack } from 'aws-cdk-lib/core';
 import { Vpc } from 'aws-cdk-lib/aws-ec2';
 import { ApplicationLoadBalancedFargateService } from 'aws-cdk-lib/aws-ecs-patterns';
-import { ConnectionType, Cors, HttpIntegration, Integration, RestApi, VpcLink } from 'aws-cdk-lib/aws-apigateway';
-import { CfnOutput } from 'aws-cdk-lib/core';
-import { Cluster, ContainerImage, FargateService, FargateTaskDefinition, LogDrivers } from 'aws-cdk-lib/aws-ecs';
-import { ApiStackProps } from '../types';
+import { ConnectionType, Cors, HttpIntegration, RestApi } from 'aws-cdk-lib/aws-apigateway';
+import { Cluster, ContainerImage, FargateTaskDefinition, LogDrivers } from 'aws-cdk-lib/aws-ecs';
 import { ApplicationLoadBalancer } from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import { StringParameter } from 'aws-cdk-lib/aws-ssm';
+import { ApiStackProps } from '../types';
 
 export class ApiStack extends Stack {
   constructor(scope: App, id: string, props: ApiStackProps) {
@@ -35,7 +34,6 @@ export class ApiStack extends Stack {
       memoryLimitMiB: 512,
     });
     
-    // const registryUri = 'amazon/amazon-ecs-sample';
     const registryUri = StringParameter.valueForStringParameter(this, dockerRegistryImageUriSsmParamName);
 
     new CfnOutput(this, 'UserServiceImageRegistryUri', {
@@ -45,7 +43,7 @@ export class ApiStack extends Stack {
     const image = ContainerImage.fromRegistry(registryUri);
 
     // Add a container to the task definition
-    const container = taskDefinition.addContainer('UserServiceContainer', {
+    taskDefinition.addContainer('UserServiceContainer', {
       image,
       logging: LogDrivers.awsLogs({ streamPrefix: 'user-service' }), // Configure logging to CloudWatch Logs,
       environment: {
@@ -61,30 +59,6 @@ export class ApiStack extends Stack {
       ]
     });
 
-    // const service = new FargateService(this, 'UserService', {
-    //   cluster,
-    //   taskDefinition,
-    //   circuitBreaker: {
-    //     rollback: true,
-    //   },
-    //   desiredCount: 1,
-    //   assignPublicIp: true
-    // });
-
-    // const loadBalancer = new ApplicationLoadBalancer(this, 'UserServiceLoadBalancer', {
-    //   vpc: vpc,
-    //   internetFacing: true // Expose the ALB to the internet
-    // });
-
-    // const listener = loadBalancer.addListener('UserServiceLoadBalancerListener', {
-    //   port: 80
-    // });
-
-    // listener.addTargets('UserServiceLoadBalancerTargets', {
-    //   targets: [service],
-    //   port: 80
-    // });
-
     // Create a Fargate service
     const service = new ApplicationLoadBalancedFargateService(this, 'UserService', {
       cluster,
@@ -92,15 +66,6 @@ export class ApiStack extends Stack {
       circuitBreaker: {
         rollback: true,
       },
-      // taskImageOptions: {
-      //   image,
-      //   environment: {
-      //     DISABLE_AUTH: 'true',
-      //     SERVICE_CALL_RETRY_COUNT: '3',
-      //     OPENSEARCH_NODE_URIS: 'http://opensearch-master-node:9200',
-      //     OPENSEARCH_USER_INDEX_NAME: 'users',
-      //   }
-      // },
       cpu: 256,
       memoryLimitMiB: 512,
       desiredCount: 1,
