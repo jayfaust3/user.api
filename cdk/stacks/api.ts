@@ -77,6 +77,11 @@ export class ApiStack extends Stack {
 
     const backendServiceUrl = `http://${loadBalancer.loadBalancerDnsName}`;
 
+    // Output the endpoint URL
+    new CfnOutput(this, 'UserServiceUrl', {
+      value: backendServiceUrl
+    });
+
     // Create an API Gateway
     const api = new RestApi(this, 'UserApiGateway', {
       defaultCorsPreflightOptions: {
@@ -87,6 +92,10 @@ export class ApiStack extends Stack {
       deployOptions: {
         stageName: 'v1'
       }
+    });
+
+    new CfnOutput(this, 'UserApiGatewayEndpoint', {
+      value: api.url
     });
 
     // Define API root
@@ -165,14 +174,5 @@ export class ApiStack extends Stack {
         }
       )
     );
-
-    // Output the endpoint URL
-    new CfnOutput(this, 'UserServiceEndpoint', {
-      value: loadBalancer.loadBalancerDnsName
-    });
-
-    new CfnOutput(this, 'UserApiGatewayEndpoint', {
-      value: api.url
-    });
   }
 }
