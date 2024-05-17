@@ -1,9 +1,9 @@
 import { App, CfnOutput, Stack } from 'aws-cdk-lib/core';
 import { Vpc } from 'aws-cdk-lib/aws-ec2';
-import { ApplicationLoadBalancedFargateService } from 'aws-cdk-lib/aws-ecs-patterns';
+import { NetworkLoadBalancedFargateService } from 'aws-cdk-lib/aws-ecs-patterns';
 import { ConnectionType, Cors, HttpIntegration, RestApi } from 'aws-cdk-lib/aws-apigateway';
 import { Cluster, ContainerImage, FargateTaskDefinition, LogDrivers } from 'aws-cdk-lib/aws-ecs';
-import { ApplicationLoadBalancer } from 'aws-cdk-lib/aws-elasticloadbalancingv2';
+import { NetworkLoadBalancer } from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 import { ApiStackProps } from '../types';
 
@@ -42,6 +42,7 @@ export class ApiStack extends Stack {
 
     const image = ContainerImage.fromRegistry(registryUri);
 
+
     // Add a container to the task definition
     taskDefinition.addContainer('UserServiceContainer', {
       image,
@@ -60,7 +61,7 @@ export class ApiStack extends Stack {
     });
 
     // Create a Fargate service
-    const service = new ApplicationLoadBalancedFargateService(this, 'UserService', {
+    const service = new NetworkLoadBalancedFargateService(this, 'UserService', {
       cluster,
       taskDefinition,
       circuitBreaker: {
@@ -72,7 +73,7 @@ export class ApiStack extends Stack {
       publicLoadBalancer: true
     });
 
-    const loadBalancer: ApplicationLoadBalancer = service.loadBalancer;
+    const loadBalancer: NetworkLoadBalancer = service.loadBalancer;
 
     const backendServiceUrl = `http://${loadBalancer.loadBalancerDnsName}`;
 
@@ -83,6 +84,9 @@ export class ApiStack extends Stack {
         allowMethods: Cors.ALL_METHODS,
         allowHeaders: Cors.DEFAULT_HEADERS
       },
+      deployOptions: {
+        stageName: 'v1'
+      }
     });
 
     // Define API root
